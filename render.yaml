@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: degendna-trading-persona-asp
+    runtime: node
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: X402_ENABLED
+        value: "true"
+      - key: X402_NETWORK
+        value: eip155:196
+      - key: X402_PRICE
+        value: "$3.99"
+      - key: X402_PAY_TO
+        sync: false
+      - key: OKX_API_KEY
+        sync: false
+      - key: OKX_SECRET_KEY
+        sync: false
+      - key: OKX_PASSPHRASE
+        sync: false
+      - key: OKX_BASE_URL
+        value: https://web3.okx.com

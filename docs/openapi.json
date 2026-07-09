@@ -1,0 +1,145 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DegenDNA Trading Persona API Service",
+    "version": "degen-persona-code-v3-72q",
+    "description": "Original DegenDNA.fun trading-behavior profiling service. It scores a 72-question answer set and returns a shareable persona code, confidence, six-axis preferences, risk blind spots, and trading review guidance."
+  },
+  "servers": [
+    {
+      "url": "https://YOUR_DEPLOYED_DOMAIN"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Check service health.",
+        "responses": {
+          "200": {
+            "description": "Service status"
+          }
+        }
+      }
+    },
+    "/api/asp/trading-persona": {
+      "get": {
+        "summary": "Get questionnaire metadata and all 72 questions.",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["zh", "en"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Questionnaire payload"
+          }
+        }
+      },
+      "post": {
+        "summary": "Compatibility scoring endpoint. Prefer the paid /score endpoint for A2MCP listing.",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["zh", "en"]
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ScoreRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Scored persona result"
+          },
+          "400": {
+            "description": "Invalid or insufficient answers"
+          }
+        }
+      }
+    },
+    "/api/asp/trading-persona/score": {
+      "post": {
+        "summary": "Paid scoring endpoint for A2MCP listing.",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["zh", "en"]
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ScoreRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Scored persona result"
+          },
+          "400": {
+            "description": "Invalid or insufficient answers"
+          },
+          "402": {
+            "description": "Payment required when x402 protection is enabled"
+          }
+        }
+      }
+    },
+    "/mcp": {
+      "post": {
+        "summary": "Lightweight MCP-compatible JSON-RPC endpoint exposing questionnaire and scoring tools.",
+        "responses": {
+          "200": {
+            "description": "JSON-RPC response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "requestBodies": {
+      "ScoreRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "answers": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": -2,
+                        "maximum": 2
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number",
+                        "minimum": -2,
+                        "maximum": 2
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": ["answers"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
