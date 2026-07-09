@@ -106,6 +106,10 @@ OKX_API_KEY=...
 OKX_SECRET_KEY=...
 OKX_PASSPHRASE=...
 OKX_BASE_URL=https://web3.okx.com
+OKX_SYNC_SETTLE=false
+X402_SYNC_ON_START=false
 ```
+
+On Railway, do not manually add `PORT`; Railway injects the correct runtime port.
 
 Use a public HTTPS domain for OKX.AI registration.

@@ -141,7 +141,43 @@ async function installOptionalX402(expressApp) {
         mimeType: "application/json"
       }
     };
-    expressApp.use(paymentMiddleware(routes, resourceServer));
+
+    let paymentReady = false;
+    let paymentInitPromise = null;
+    const initializePayment = async () => {
+      if (paymentReady) return;
+      paymentInitPromise ??= resourceServer.initialize()
+        .then(() => {
+          paymentReady = true;
+        })
+        .catch((error) => {
+          paymentInitPromise = null;
+          throw error;
+        });
+      await paymentInitPromise;
+    };
+
+    const syncFacilitatorOnStart = isTruthy(process.env.X402_SYNC_ON_START);
+    if (syncFacilitatorOnStart) {
+      initializePayment().catch((error) => {
+        console.warn(`X402 facilitator startup sync failed: ${error.message}`);
+      });
+    }
+
+    expressApp.use(async (req, res, next) => {
+      if (req.method !== "POST" || req.path !== paidRoute) return next();
+      try {
+        await initializePayment();
+        next();
+      } catch (error) {
+        console.warn(`X402 facilitator is unavailable: ${error.message}`);
+        res.status(503).json({
+          ok: false,
+          error: "Payment facilitator is temporarily unavailable. Please check the OKX API credentials and x402 seller configuration."
+        });
+      }
+    });
+    expressApp.use(paymentMiddleware(routes, resourceServer, undefined, undefined, false));
   } catch (error) {
     console.warn(`X402 middleware could not be installed: ${error.message}`);
   }
@@ -336,6 +372,7 @@ function paymentStatus() {
     requested,
     network: process.env.X402_NETWORK || "eip155:196",
     price: process.env.X402_PRICE || "$3.99",
-    protectedRoute: paidRoute
+    protectedRoute: paidRoute,
+    syncFacilitatorOnStart: isTruthy(process.env.X402_SYNC_ON_START)
   };
 }
