@@ -17,6 +17,7 @@
     "@okxweb3/x402-evm": "^0.2.1",
     "@okxweb3/x402-express": "^0.1.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.18.3"
   }
 }

@@ -63,8 +63,11 @@ The `/score` route is the intended paid A2MCP listing endpoint. Set `X402_PAY_TO
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
+
+Fill `.env` with local credentials before testing x402. The file is ignored by Git and must never be committed.
 
 Health check:
 
