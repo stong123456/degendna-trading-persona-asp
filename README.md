@@ -110,6 +110,6 @@ OKX_SYNC_SETTLE=false
 X402_SYNC_ON_START=false
 ```
 
-On Railway, do not manually add `PORT`; Railway injects the correct runtime port.
+`PUBLIC_BASE_URL` is recommended, but the service can infer the public HTTPS domain from Railway request headers if it is not set. On Railway, do not manually add `PORT`; Railway injects the correct runtime port.
 
 Use a public HTTPS domain for OKX.AI registration.

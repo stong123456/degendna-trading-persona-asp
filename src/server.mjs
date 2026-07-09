@@ -12,18 +12,21 @@ import {
 
 const app = express();
 const port = Number(process.env.PORT || 8788);
-const publicBaseUrl = String(process.env.PUBLIC_BASE_URL || `http://127.0.0.1:${port}`).replace(/\/+$/, "");
+const configuredPublicBaseUrl = normalizeBaseUrl(process.env.PUBLIC_BASE_URL);
+const fallbackPublicBaseUrl = `http://127.0.0.1:${port}`;
 const serviceName = "degendna-trading-persona";
 const serviceVersion = DEGEN_PERSONA_MODEL_VERSION;
 const paidRoute = "/api/asp/trading-persona/score";
 
 app.disable("x-powered-by");
+app.set("trust proxy", true);
 app.use(cors());
 app.use(express.json({ limit: "96kb" }));
 
 await installOptionalX402(app);
 
-app.get("/", (_req, res) => {
+app.get("/", (req, res) => {
+  const publicBaseUrl = resolvePublicBaseUrl(req);
   res.json({
     ok: true,
     service: serviceName,
@@ -35,17 +38,17 @@ app.get("/", (_req, res) => {
       scoring: `${publicBaseUrl}${paidRoute}`,
       mcp: `${publicBaseUrl}/mcp`
     },
-    payment: paymentStatus()
+    payment: paymentStatus(req)
   });
 });
 
-app.get("/health", (_req, res) => {
+app.get("/health", (req, res) => {
   res.json({
     ok: true,
     service: serviceName,
     version: serviceVersion,
     questionCount: DEGEN_PERSONA_QUESTIONS.length,
-    payment: paymentStatus()
+    payment: paymentStatus(req)
   });
 });
 
@@ -127,7 +130,7 @@ async function installOptionalX402(expressApp) {
     });
     const resourceServer = new x402ResourceServer(facilitatorClient);
     resourceServer.register(network, new ExactEvmScheme());
-    const routes = {
+    const buildPaymentRoutes = (resourceBaseUrl) => ({
       [`POST ${paidRoute}`]: {
         accepts: [{
           scheme: "exact",
@@ -136,11 +139,11 @@ async function installOptionalX402(expressApp) {
           price: process.env.X402_PRICE || "$3.99",
           maxTimeoutSeconds: Number(process.env.X402_TIMEOUT_SECONDS || 300)
         }],
-        resource: `${publicBaseUrl}${paidRoute}`,
+        resource: `${resourceBaseUrl}${paidRoute}`,
         description: "DegenDNA 72-question trading persona scoring report.",
         mimeType: "application/json"
       }
-    };
+    });
 
     let paymentReady = false;
     let paymentInitPromise = null;
@@ -164,20 +167,31 @@ async function installOptionalX402(expressApp) {
       });
     }
 
+    const paymentMiddlewaresByBaseUrl = new Map();
+    const middlewareForRequest = (req) => {
+      const resourceBaseUrl = resolvePublicBaseUrl(req);
+      if (!paymentMiddlewaresByBaseUrl.has(resourceBaseUrl)) {
+        paymentMiddlewaresByBaseUrl.set(
+          resourceBaseUrl,
+          paymentMiddleware(buildPaymentRoutes(resourceBaseUrl), resourceServer, undefined, undefined, false)
+        );
+      }
+      return paymentMiddlewaresByBaseUrl.get(resourceBaseUrl);
+    };
+
     expressApp.use(async (req, res, next) => {
       if (req.method !== "POST" || req.path !== paidRoute) return next();
       try {
         await initializePayment();
-        next();
       } catch (error) {
         console.warn(`X402 facilitator is unavailable: ${error.message}`);
-        res.status(503).json({
+        return res.status(503).json({
           ok: false,
           error: "Payment facilitator is temporarily unavailable. Please check the OKX API credentials and x402 seller configuration."
         });
       }
+      return middlewareForRequest(req)(req, res, next);
     });
-    expressApp.use(paymentMiddleware(routes, resourceServer, undefined, undefined, false));
   } catch (error) {
     console.warn(`X402 middleware could not be installed: ${error.message}`);
   }
@@ -356,11 +370,26 @@ function normalizeAddress(value) {
   return /^0x[a-fA-F0-9]{40}$/.test(raw) ? raw : "";
 }
 
+function normalizeBaseUrl(value) {
+  const raw = String(value || "").trim().replace(/\/+$/, "");
+  return /^https?:\/\//i.test(raw) ? raw : "";
+}
+
+function resolvePublicBaseUrl(req) {
+  if (configuredPublicBaseUrl) return configuredPublicBaseUrl;
+  if (!req) return fallbackPublicBaseUrl;
+  const forwardedProto = String(req.get("x-forwarded-proto") || "").split(",")[0].trim();
+  const forwardedHost = String(req.get("x-forwarded-host") || "").split(",")[0].trim();
+  const proto = forwardedProto || req.protocol || "http";
+  const host = forwardedHost || req.get("host");
+  return host ? `${proto}://${host}`.replace(/\/+$/, "") : fallbackPublicBaseUrl;
+}
+
 function isTruthy(value) {
   return ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase());
 }
 
-function paymentStatus() {
+function paymentStatus(req) {
   const requested = isTruthy(process.env.X402_ENABLED) || Boolean(process.env.X402_PAY_TO || process.env.PAY_TO_ADDRESS);
   const configured = requested
     && Boolean(normalizeAddress(process.env.X402_PAY_TO || process.env.PAY_TO_ADDRESS || ""))
@@ -373,6 +402,7 @@ function paymentStatus() {
     network: process.env.X402_NETWORK || "eip155:196",
     price: process.env.X402_PRICE || "$3.99",
     protectedRoute: paidRoute,
+    resourceBaseUrl: resolvePublicBaseUrl(req),
     syncFacilitatorOnStart: isTruthy(process.env.X402_SYNC_ON_START)
   };
 }
