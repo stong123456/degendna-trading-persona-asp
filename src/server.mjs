@@ -190,10 +190,40 @@ async function installOptionalX402(expressApp) {
           error: "Payment facilitator is temporarily unavailable. Please check the OKX API credentials and x402 seller configuration."
         });
       }
+      wrapPaymentRequiredResponse(res);
       return middlewareForRequest(req)(req, res, next);
     });
   } catch (error) {
     console.warn(`X402 middleware could not be installed: ${error.message}`);
+  }
+}
+
+function wrapPaymentRequiredResponse(res) {
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode === 402) {
+      const paymentRequired = firstHeaderValue(res.getHeader("PAYMENT-REQUIRED") || res.getHeader("payment-required"));
+      const challenge = decodePaymentRequired(paymentRequired);
+      if (challenge?.x402Version) {
+        res.setHeader("PAYMENT-REQUIRED", paymentRequired);
+        return originalJson(challenge);
+      }
+    }
+    return originalJson(body);
+  };
+}
+
+function firstHeaderValue(value) {
+  if (Array.isArray(value)) return String(value[0] || "");
+  return String(value || "");
+}
+
+function decodePaymentRequired(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(Buffer.from(value, "base64").toString("utf8"));
+  } catch (_error) {
+    return null;
   }
 }
 
