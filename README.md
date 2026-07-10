@@ -1,63 +1,61 @@
 # DegenDNA Trading Persona ASP
 
-Independent A2MCP-ready service for the DegenDNA trading-persona self-check.
+DegenDNA 是给链上交易者用的自我风控镜子。它不告诉用户买什么，只帮助用户看清自己为什么容易在同一个地方亏钱。
 
-The service exposes an original 72-question, six-dimension trading-behavior model. It does not use MBTI, Myers-Briggs Type Indicator, or third-party licensed personality inventory content.
+This is an independent A2MCP-ready ASP service for the DegenDNA trading-persona self-check. The model is original DegenDNA.fun content: 72 self-developed questions across six trading-behavior dimensions. It does not use MBTI, Myers-Briggs Type Indicator, or third-party licensed personality inventory content.
 
-## OKX.AI Listing Draft
+## OKX.AI Listing Copy
 
 Agent name:
 
 ```text
-DegenDNA
+DegenDNA 交易人格诊断
 ```
 
 Agent description:
 
 ```text
-DegenDNA 是面向链上交易者的原创交易行为画像服务，用72题模型生成可分享的人格码与复盘建议。
+用 12 到 72 题测出你的链上交易人格，识别 FOMO、扛单、追涨、过度谨慎、长线耐心、短线反应等行为偏好，并生成可分享的人格码与交易复盘卡。
 ```
 
-Service name:
+Suggested service tiers:
 
-```text
-交易人格进阶画像
-```
-
-Service type:
-
-```text
-API service
-```
-
-Fee:
-
-```text
-3.99
-```
+| Service name | Endpoint | Fee |
+| --- | --- | --- |
+| 测出我的链上交易人格·极速版 | `/api/asp/trading-persona/score/quick` | 0.10 USDT |
+| 测出我的链上交易人格·标准版 | `/api/asp/trading-persona/score/standard` | 1.99 USDT |
+| 测出我的链上交易人格·完整版 | `/api/asp/trading-persona/score/full` | 3.99 USDT |
 
 Service description:
 
 ```text
-1. 基于原创72题交易行为模型，为链上交易者生成类型缩写、六轴偏好码、细分后缀、优势盲区和复盘建议。
-2. 用户需提交完整自测答案或按接口传入题目选项，服务返回结构化画像、置信度、风控和执行建议。
+DegenDNA 会根据你的交易习惯生成交易人格码、六维偏好、主要优势、常见亏损盲区和复盘清单。它不预测行情，也不提供买卖建议，只帮助用户看清自己在市场里最容易重复犯的动作。
 ```
 
-Recommended endpoint after deployment:
+## Product Tiers
 
-```text
-https://YOUR_DEPLOYED_DOMAIN/api/asp/trading-persona/score
-```
+| Tier | Questions | Delivery |
+| --- | ---: | --- |
+| Quick | 12 | Persona code, two strengths, two blind spots, one immediate rule, X share copy, visual quick-card report. |
+| Standard | 24 | Six-dimension profile, strengths and risks, execution protocol, light trading plan, share copy, visual standard report. |
+| Full | 72 | Complete score report, entry/position/exit rules, emotional protocol, review questions, 7/14/30-day training plan, share copy, full visual playbook. |
+
+Free routes only return the questionnaire, catalog, or calibration signals. Paid reports are returned only from the `/score/*` endpoints protected by OKX x402 payment challenges.
 
 ## API
 
 - `GET /health`
-- `GET /api/asp/trading-persona`
+- `GET /api/asp/trading-persona?mode=quick|standard|full`
+- `POST /api/asp/trading-persona/preview`
 - `POST /api/asp/trading-persona`
-- `POST /api/asp/trading-persona/score`
+- `POST /api/asp/trading-persona/score/quick`
+- `POST /api/asp/trading-persona/score/standard`
+- `POST /api/asp/trading-persona/score/full`
+- `POST /api/asp/trading-persona/score` legacy full-report endpoint
+- `GET /report/demo?mode=quick|standard|full`
 - `POST /mcp`
 
-The `/score` route is the intended paid A2MCP listing endpoint. Set `X402_PAY_TO`, `X402_ENABLED=true`, and OKX Developer Portal API credentials in production to enable OKX x402 payment protection.
+The `/score/*` routes are intended paid A2MCP listing endpoints. Set `X402_PAY_TO`, `X402_ENABLED=true`, and OKX Developer Portal API credentials in production to enable OKX x402 payment protection. Unpaid requests should return a standard HTTP 402 challenge body.
 
 ## Local Run
 
@@ -75,18 +73,24 @@ Health check:
 curl http://127.0.0.1:8788/health
 ```
 
-Fetch questionnaire:
+Fetch a 12-question quick assessment:
 
 ```bash
-curl "http://127.0.0.1:8788/api/asp/trading-persona?lang=zh"
+curl "http://127.0.0.1:8788/api/asp/trading-persona?mode=quick&lang=zh"
 ```
 
-Score answers:
+Preview the visual report page:
 
 ```bash
-curl -X POST "http://127.0.0.1:8788/api/asp/trading-persona/score?lang=zh" \
+open "http://127.0.0.1:8788/report/demo?mode=full&lang=zh"
+```
+
+Score quick answers:
+
+```bash
+curl -X POST "http://127.0.0.1:8788/api/asp/trading-persona/score/quick?lang=zh" \
   -H "content-type: application/json" \
-  --data @examples/example-request.json
+  --data @examples/example-request-quick.json
 ```
 
 ## Deploy
@@ -100,6 +104,9 @@ NODE_ENV=production
 PUBLIC_BASE_URL=https://YOUR_DEPLOYED_DOMAIN
 X402_ENABLED=true
 X402_NETWORK=eip155:196
+X402_PRICE_QUICK=$0.10
+X402_PRICE_STANDARD=$1.99
+X402_PRICE_FULL=$3.99
 X402_PRICE=$3.99
 X402_PAY_TO=0xYourXLayerReceivingAddress
 OKX_API_KEY=...
@@ -110,6 +117,6 @@ OKX_SYNC_SETTLE=false
 X402_SYNC_ON_START=false
 ```
 
-`PUBLIC_BASE_URL` is recommended, but the service can infer the public HTTPS domain from Railway request headers if it is not set. On Railway, do not manually add `PORT`; Railway injects the correct runtime port.
+`PUBLIC_BASE_URL` is recommended. On Railway, do not manually add `PORT`; Railway injects the correct runtime port.
 
-Use a public HTTPS domain for OKX.AI registration.
+Use a public HTTPS domain for OKX.AI registration. The visual demo page is safe to share for demos because it uses sample answers, not user payment data.

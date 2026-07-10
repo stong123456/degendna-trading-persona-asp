@@ -1,0 +1,91 @@
+{
+  "ok": true,
+  "service": "degendna-trading-persona",
+  "reportLevel": "full",
+  "mode": {
+    "key": "full",
+    "name": "完整版",
+    "reportName": "72题完整训练计划",
+    "questionCount": 72,
+    "price": "$3.99"
+  },
+  "result": {
+    "reportLevel": "full",
+    "reportName": "72题完整训练计划",
+    "title": "均衡复盘型",
+    "code": "BAL-ELP-AFH-C2",
+    "axisCode": "ELP-AFH",
+    "classification": {
+      "primaryType": "均衡复盘型",
+      "subtype": "核心均衡",
+      "intensity": "可见偏好",
+      "confidence": "高置信"
+    },
+    "summary": "你的交易人格更接近「均衡复盘型」（BAL-ELP-AFH-C2）。当前最突出的维度是「资金管理力」与「耐心与纪律」，细分后缀为「核心均衡 · 可见偏好」，适合用作交易行为复盘，而不是投资建议。",
+    "shareTitle": "我是 BAL-ELP-AFH-C2 均衡复盘型",
+    "oneLineSummary": "你的优势是可塑性强，最该训练的是优势不够尖锐。",
+    "shareCardText": "我的 DegenDNA：BAL-ELP-AFH-C2｜均衡复盘型｜优势：可塑性强｜盲区：优势不够尖锐",
+    "twitterCopy": "刚测了一下我的链上交易人格，结果是 BAL-ELP-AFH-C2 均衡复盘型。你的优势是可塑性强，最该训练的是优势不够尖锐。 这不是买卖建议，是一次交易行为复盘。#OKXAI",
+    "strengths": ["可塑性强", "不容易单点失控", "适合建立稳定交易系统"],
+    "risks": ["优势不够尖锐", "容易在不同策略间摇摆", "需要更清晰的主策略"],
+    "protocol": "选定一个主交易周期和一个主信号源，减少风格漂移。",
+    "dimensions": [
+      { "key": "social", "name": "机会敏感度", "direction": "社交共振", "score": 19.5, "strength": 39, "code": "E", "tag": "ECHO" },
+      { "key": "signal", "name": "决策果断性", "direction": "叙事雷达", "score": 3.75, "strength": 8, "code": "L", "tag": "LORE" },
+      { "key": "execution", "name": "资金管理力", "direction": "情绪点火", "score": 24.25, "strength": 49, "code": "P", "tag": "PULSE" },
+      { "key": "risk", "name": "风险承受力", "direction": "冲锋进攻", "score": 7.75, "strength": 16, "code": "A", "tag": "APE" },
+      { "key": "horizon", "name": "耐心与纪律", "direction": "短线反应", "score": 24.5, "strength": 49, "code": "F", "tag": "FLASH" },
+      { "key": "validation", "name": "情绪稳定性", "direction": "FOMO 牵引", "score": 16.25, "strength": 33, "code": "H", "tag": "HEAT" }
+    ],
+    "tradingPlan": {
+      "headline": "BAL-ELP-AFH-C2 的核心训练目标：把「核心均衡」变成可执行系统，而不是临场感觉。",
+      "entryChecklist": [
+        "叙事很强时，先写下一个可验证的反证指标；指标没过，不把热度当入场理由。",
+        "群聊或时间线同时看多时，必须独立写出自己的入场理由和失效条件。",
+        "短线机会只做你能在同一天写清楚退出条件的交易。"
+      ],
+      "positionRules": [
+        "所有高波动仓位拆成观察仓、确认仓、主仓三段，禁止一次性打满。",
+        "下单前写出最大亏损金额、加仓条件和撤退线；写不出来就不做。",
+        "仓位大小以“亏了还能睡着”为上限，而不是以“赚了能发多大截图”为目标。"
+      ],
+      "exitRules": [
+        "价格触发退出线后先执行，再复盘；不要在触发时临场重写故事。",
+        "连续盈利后主动降温，至少把本金或部分利润移出高波动仓。"
+      ],
+      "emotionalProtocol": [
+        "看到别人盈利截图后，至少等待一轮 K 线或 20 分钟，再决定是否行动。",
+        "每天设置一个固定看盘窗口，把市场刺激从全天候改成定时处理。"
+      ],
+      "reviewQuestions": [
+        "我这笔交易的入场证据来自数据、叙事、社群还是情绪？哪个权重最高？",
+        "如果这笔交易亏损，我提前承认的最大亏损是多少？",
+        "退出条件是价格、时间、数据失效，还是单纯感觉变了？",
+        "这次行动是在执行系统，还是在补偿错过、亏损或焦虑？"
+      ],
+      "trainingPlan": [
+        "7 天：每笔交易前只写三行：入场理由、失效条件、最大亏损。",
+        "14 天：统计自己最常被哪类触发驱动：晒图、群聊、急拉、回撤、无聊。",
+        "30 天：只优化一个维度，不同时改周期、仓位、标的和信号源。"
+      ]
+    },
+    "reportPage": {
+      "layout": "full-playbook",
+      "visualDesign": {
+        "theme": "neon-risk-passport",
+        "primaryAsset": "/assets/degendna-logo.png",
+        "components": ["heroBadge", "shareCard", "sixAxisMeters", "fullPlaybook", "trainingTimeline", "reviewChecklist"]
+      },
+      "unlockedSections": ["完整报告", "六维分数", "完整交易计划", "训练计划", "分享文案"],
+      "lockedSections": []
+    }
+  },
+  "completion": {
+    "answeredCount": 72,
+    "modeQuestionCount": 72,
+    "totalQuestionCount": 72,
+    "modeCompletionRate": 1,
+    "totalCompletionRate": 1
+  },
+  "disclaimer": "DegenDNA.fun 自研交易人格自查模型，用于娱乐、自我观察和交易行为复盘；不属于 MBTI、Myers-Briggs Type Indicator 或任何第三方授权人格量表，结果不构成投资建议。"
+}

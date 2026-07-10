@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "DegenDNA Trading Persona API Service",
+    "title": "DegenDNA Trading Persona ASP",
     "version": "degen-persona-code-v3-72q",
-    "description": "Original DegenDNA.fun trading-behavior profiling service. It scores a 72-question answer set and returns a shareable persona code, confidence, six-axis preferences, risk blind spots, and trading review guidance."
+    "description": "Original DegenDNA.fun trading-behavior profiling service with quick, standard, and full paid report tiers. The model is not MBTI or Myers-Briggs content and does not provide investment advice."
   },
   "servers": [
     {
@@ -13,7 +13,7 @@
   "paths": {
     "/health": {
       "get": {
-        "summary": "Check service health.",
+        "summary": "Check service health and payment configuration.",
         "responses": {
           "200": {
             "description": "Service status"
@@ -23,14 +23,24 @@
     },
     "/api/asp/trading-persona": {
       "get": {
-        "summary": "Get questionnaire metadata and all 72 questions.",
+        "summary": "Get questionnaire metadata for quick, standard, or full mode.",
         "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["quick", "standard", "full"],
+              "default": "quick"
+            }
+          },
           {
             "name": "lang",
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["zh", "en"]
+              "enum": ["zh", "en"],
+              "default": "zh"
             }
           }
         ],
@@ -41,49 +51,36 @@
         }
       },
       "post": {
-        "summary": "Compatibility scoring endpoint. Prefer the paid /score endpoint for A2MCP listing.",
-        "parameters": [
-          {
-            "name": "lang",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": ["zh", "en"]
-            }
-          }
-        ],
-        "requestBody": {
-          "$ref": "#/components/requestBodies/ScoreRequest"
-        },
+        "summary": "Free catalog endpoint. It does not return a persona report.",
         "responses": {
           "200": {
-            "description": "Scored persona result"
-          },
-          "400": {
-            "description": "Invalid or insufficient answers"
+            "description": "Catalog and paid route options"
           }
         }
       }
     },
-    "/api/asp/trading-persona/score": {
+    "/api/asp/trading-persona/preview": {
       "post": {
-        "summary": "Paid scoring endpoint for A2MCP listing.",
-        "parameters": [
-          {
-            "name": "lang",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": ["zh", "en"]
-            }
+        "summary": "Free preview catalog endpoint for report tiers and paid routes.",
+        "responses": {
+          "200": {
+            "description": "Catalog and paid route options"
           }
+        }
+      }
+    },
+    "/api/asp/trading-persona/score/quick": {
+      "post": {
+        "summary": "Paid 12-question quick-card report. Suggested fee: 0.10 USDT.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Lang" }
         ],
         "requestBody": {
           "$ref": "#/components/requestBodies/ScoreRequest"
         },
         "responses": {
           "200": {
-            "description": "Scored persona result"
+            "description": "Quick persona card"
           },
           "400": {
             "description": "Invalid or insufficient answers"
@@ -94,9 +91,94 @@
         }
       }
     },
+    "/api/asp/trading-persona/score/standard": {
+      "post": {
+        "summary": "Paid 24-question standard report. Suggested fee: 1.99 USDT.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Lang" }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ScoreRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Standard report"
+          },
+          "400": {
+            "description": "Invalid or insufficient answers"
+          },
+          "402": {
+            "description": "Payment required when x402 protection is enabled"
+          }
+        }
+      }
+    },
+    "/api/asp/trading-persona/score/full": {
+      "post": {
+        "summary": "Paid 72-question full playbook report. Suggested fee: 3.99 USDT.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Lang" }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ScoreRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Full report"
+          },
+          "400": {
+            "description": "Invalid or insufficient answers"
+          },
+          "402": {
+            "description": "Payment required when x402 protection is enabled"
+          }
+        }
+      }
+    },
+    "/api/asp/trading-persona/score": {
+      "post": {
+        "summary": "Legacy paid full-report endpoint. Prefer /score/full for new listings.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Lang" }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ScoreRequest"
+        },
+        "responses": {
+          "200": {
+            "description": "Full report"
+          },
+          "402": {
+            "description": "Payment required when x402 protection is enabled"
+          }
+        }
+      }
+    },
+    "/report/demo": {
+      "get": {
+        "summary": "Render a visual demo report page using sample answers.",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["quick", "standard", "full"],
+              "default": "quick"
+            }
+          },
+          { "$ref": "#/components/parameters/Lang" }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTML visual demo report"
+          }
+        }
+      }
+    },
     "/mcp": {
       "post": {
-        "summary": "Lightweight MCP-compatible JSON-RPC endpoint exposing questionnaire and scoring tools.",
+        "summary": "MCP-compatible JSON-RPC endpoint exposing questionnaire, calibration preview, and natural-language profile preview tools.",
         "responses": {
           "200": {
             "description": "JSON-RPC response"
@@ -106,6 +188,17 @@
     }
   },
   "components": {
+    "parameters": {
+      "Lang": {
+        "name": "lang",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["zh", "en"],
+          "default": "zh"
+        }
+      }
+    },
     "requestBodies": {
       "ScoreRequest": {
         "required": true,
@@ -115,6 +208,7 @@
               "type": "object",
               "properties": {
                 "answers": {
+                  "description": "For quick and standard modes, arrays are mapped to the returned question order. Objects can use degenPersona:<index> keys.",
                   "oneOf": [
                     {
                       "type": "array",
