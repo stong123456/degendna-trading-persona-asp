@@ -28,6 +28,7 @@ const scoreRoutes = {
   standard: `${paidRoute}/standard`,
   full: `${paidRoute}/full`
 };
+const protectedScoreMethods = ["GET", "POST"];
 const protectedScoreRoutes = [paidRoute, ...Object.values(scoreRoutes)];
 const ASSESSMENT_MODES = {
   quick: {
@@ -108,6 +109,22 @@ app.get("/health", (req, res) => {
 
 app.get("/api/asp/trading-persona", (req, res) => {
   res.json(questionnairePayload(normalizeLang(req.query.lang), normalizeMode(req.query.mode)));
+});
+
+app.get(paidRoute, (req, res) => {
+  res.json(scoreGetPayload("full", normalizeLang(req.query.lang), req));
+});
+
+app.get(scoreRoutes.quick, (req, res) => {
+  res.json(scoreGetPayload("quick", normalizeLang(req.query.lang), req));
+});
+
+app.get(scoreRoutes.standard, (req, res) => {
+  res.json(scoreGetPayload("standard", normalizeLang(req.query.lang), req));
+});
+
+app.get(scoreRoutes.full, (req, res) => {
+  res.json(scoreGetPayload("full", normalizeLang(req.query.lang), req));
 });
 
 app.get("/report/demo", (req, res) => {
@@ -241,8 +258,9 @@ async function installOptionalX402(expressApp) {
     });
     const resourceServer = new x402ResourceServer(facilitatorClient);
     resourceServer.register(network, new ExactEvmScheme());
-    const buildRouteConfig = (resourceBaseUrl, route, mode) => ({
-      [`POST ${route}`]: {
+    const buildRouteConfig = (resourceBaseUrl, route, mode) => Object.fromEntries(protectedScoreMethods.map((method) => [
+      `${method} ${route}`,
+      {
         accepts: [{
           scheme: "exact",
           network,
@@ -254,7 +272,7 @@ async function installOptionalX402(expressApp) {
         description: `DegenDNA ${ASSESSMENT_MODES[mode].questionCount}-question ${mode} trading persona report.`,
         mimeType: "application/json"
       }
-    });
+    ]));
     const buildPaymentRoutes = (resourceBaseUrl) => ({
       ...buildRouteConfig(resourceBaseUrl, paidRoute, "full"),
       ...buildRouteConfig(resourceBaseUrl, scoreRoutes.quick, "quick"),
@@ -297,7 +315,7 @@ async function installOptionalX402(expressApp) {
     };
 
     expressApp.use(async (req, res, next) => {
-      if (req.method !== "POST" || !protectedScoreRoutes.includes(req.path)) return next();
+      if (!protectedScoreMethods.includes(req.method) || !protectedScoreRoutes.includes(req.path)) return next();
       try {
         await initializePayment();
       } catch (error) {
@@ -583,6 +601,27 @@ function previewCatalogPayload(lang = "zh", req) {
       legacyFullScore: `${baseUrl}${paidRoute}`
     },
     modes: publicModes(lang, baseUrl),
+    disclaimer: DEGEN_PERSONA_DISCLAIMER
+  };
+}
+
+function scoreGetPayload(mode = "full", lang = "zh", req) {
+  const modeKey = normalizeMode(mode, "full");
+  const baseUrl = resolvePublicBaseUrl(req);
+  return {
+    ok: true,
+    service: serviceName,
+    modelVersion: DEGEN_PERSONA_MODEL_VERSION,
+    mode: publicMode(modeKey, lang, baseUrl),
+    message: lang === "en"
+      ? "This paid endpoint is x402-protected. Submit answers with POST to generate the report."
+      : "这个付费 endpoint 已接入 x402。请使用 POST 提交 answers 生成正式报告。",
+    expectedMethod: "POST",
+    acceptsAnswerShape: {
+      answers: "array | object keyed by degenPersona:<index>"
+    },
+    questionnaire: `${baseUrl}/api/asp/trading-persona?mode=${modeKey}&lang=${lang}`,
+    demoReport: `${baseUrl}/report/demo?mode=${modeKey}&lang=${lang}`,
     disclaimer: DEGEN_PERSONA_DISCLAIMER
   };
 }
@@ -1521,6 +1560,7 @@ function paymentStatus(req) {
     network: process.env.X402_NETWORK || "eip155:196",
     prices: Object.fromEntries(Object.keys(ASSESSMENT_MODES).map((mode) => [mode, paymentPriceForMode(mode)])),
     price: paymentPriceForMode("full"),
+    protectedMethods: protectedScoreMethods,
     protectedRoutes: protectedScoreRoutes,
     protectedRoute: paidRoute,
     resourceBaseUrl: resolvePublicBaseUrl(req),
