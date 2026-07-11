@@ -14,15 +14,15 @@
     "promise": "完整 72 题画像，生成六维雷达、盲区、复盘清单、7/14/30 天训练计划和分享文案。",
     "unlocks": [
       "完整 72 题画像",
-      "六维分数",
+      "六维逐项解释",
+      "4 类交易情境应对",
       "完整交易计划",
-      "入场/仓位/退出规则",
-      "7/14/30 天训练计划",
+      "可衡量的 7/14/30 天路线",
       "X 分享文案"
     ]
   },
   "reportLevel": "full",
-  "modelVersion": "degen-persona-code-v4-normalized-72q",
+  "modelVersion": "degen-persona-code-v5-enriched-72q",
   "scoring": {
     "method": "dimension-mean-normalized-v1",
     "normalizedToQuestionCount": {
@@ -39,7 +39,7 @@
     ]
   },
   "result": {
-    "modelVersion": "degen-persona-code-v4-normalized-72q",
+    "modelVersion": "degen-persona-code-v5-enriched-72q",
     "abbr": "RUSH",
     "title": "热启冲锋型",
     "code": "RUSH-ELP-AFH-H3",
@@ -174,9 +174,9 @@
     "completionRate": 1,
     "disclaimer": "DegenDNA.fun 自研交易人格自查模型，用于娱乐、自我观察和交易行为复盘；不属于 MBTI、Myers-Briggs Type Indicator 或任何第三方授权人格量表，结果不构成投资建议。",
     "shareTitle": "我是 RUSH-ELP-AFH-H3 热启冲锋型",
-    "oneLineSummary": "你的优势是行动果断，最该训练的是容易高位追入。",
-    "shareCardText": "我的 DegenDNA：RUSH-ELP-AFH-H3｜热启冲锋型｜优势：行动果断｜盲区：容易高位追入",
-    "twitterCopy": "刚测了一下我的链上交易人格，结果是 RUSH-ELP-AFH-H3 热启冲锋型。你的优势是行动果断，最该训练的是容易高位追入。 这不是买卖建议，是一次交易行为复盘。#OKXAI",
+    "oneLineSummary": "你最有价值的能力是行动果断；下一步不是压住自己，而是为“容易高位追入”提前加一道规则。",
+    "shareCardText": "我的 DegenDNA：RUSH-ELP-AFH-H3｜热启冲锋型｜我想保留：行动果断｜我会训练：容易高位追入",
+    "twitterCopy": "刚测了一下我的链上交易人格：RUSH-ELP-AFH-H3 热启冲锋型。你最有价值的能力是行动果断；下一步不是压住自己，而是为“容易高位追入”提前加一道规则。它不告诉我买什么，只提醒我下一次别再怎样亏。#OKXAI",
     "reportLevel": "full",
     "reportName": "72题完整训练计划",
     "classification": {
@@ -185,6 +185,139 @@
       "intensity": "明确偏好",
       "confidence": "高置信"
     },
+    "narrative": {
+      "opening": "先说一句重要的：成为「热启冲锋型」并没有对错。你身上“行动果断”的部分，是市场里很真实、也很珍贵的资源。",
+      "corePattern": "你的优势和盲区，往往来自同一个按钮。平稳时，它让你行动果断；当热度、盈亏或时间压力放大时，它也可能滑向“容易高位追入”。",
+      "primarySignal": "当前最值得优先照顾的是「机会敏感度」上的“社交共振”。不是要消灭它，而是先给它加一道可执行的护栏。",
+      "confidenceNote": "完整作答让这份画像拥有更高置信度。它描述的是你在压力和机会面前容易重复的偏好，不是能力高低，也不是一成不变的命运。",
+      "reassurance": "你要训练的不是“别有情绪”或“别犯错”，而是在情绪出现、市场变吵的时候，仍然知道下一步该做什么。",
+      "subtypeNote": "行情、盈亏和他人战绩很容易把你推入即时行动模式。优势是反应快，风险是把情绪误读成信号。"
+    },
+    "dimensionInsights": [
+      {
+        "key": "social",
+        "name": "机会敏感度",
+        "direction": "社交共振",
+        "strength": 60,
+        "strengthLabel": "明显",
+        "observation": "你对群体注意力和共识升温很敏感，往往能比纯数据型交易者更早感到市场温度变化。",
+        "watchout": "这让你更容易发现正在形成的机会，也更容易在多人同时兴奋时把线索误当成结论。",
+        "practice": "把每条外部观点拆成三栏：它提供了什么线索、我自己的证据是什么、什么情况会证明我错了。"
+      },
+      {
+        "key": "signal",
+        "name": "决策果断性",
+        "direction": "叙事雷达",
+        "strength": 23,
+        "strengthLabel": "轻微",
+        "observation": "你擅长理解故事、情绪和传播路径，对早期叙事窗口有天然雷达。",
+        "watchout": "想象空间能帮助你提前站位，也可能让你对反证数据过度宽容。",
+        "practice": "每个叙事必须配一条可量化反证指标；指标失效时先降仓，再讨论故事。"
+      },
+      {
+        "key": "execution",
+        "name": "资金管理力",
+        "direction": "情绪点火",
+        "strength": 53,
+        "strengthLabel": "明显",
+        "observation": "盘面变化会快速点燃你的行动系统，你能在机会出现时迅速响应。",
+        "watchout": "高压环境下，你也更容易临场改计划、放宽止损或用下一笔修复上一笔情绪。",
+        "practice": "下单前写出最大亏损、加仓条件和撤退线；任一项写不清楚，就先不下单。"
+      },
+      {
+        "key": "risk",
+        "name": "风险承受力",
+        "direction": "冲锋进攻",
+        "strength": 50,
+        "strengthLabel": "明显",
+        "observation": "你愿意承受波动换取赔率，面对不确定性时不容易因为害怕而完全缺席。",
+        "watchout": "进攻性是收益弹性的来源，也可能让仓位在兴奋和连续盈利后失去上限。",
+        "practice": "高波动仓位统一拆成观察仓、确认仓和主仓，任何时候都不一次性打满。"
+      },
+      {
+        "key": "horizon",
+        "name": "耐心与纪律",
+        "direction": "短线反应",
+        "strength": 54,
+        "strengthLabel": "明显",
+        "observation": "你偏好快速反馈和事件窗口，能及时切换注意力并捕捉阶段性波动。",
+        "watchout": "速度带来机会，也会放大无聊交易、过度点击和手续费侵蚀。",
+        "practice": "给每天设置有效交易次数上限；超过上限后只能记录，不能新开计划外仓位。"
+      },
+      {
+        "key": "validation",
+        "name": "情绪稳定性",
+        "direction": "FOMO 牵引",
+        "strength": 30,
+        "strengthLabel": "可见",
+        "observation": "你对错过、他人战绩和钱包波动较敏感，这让你能迅速感到市场情绪拐点。",
+        "watchout": "外部反馈也可能进入自我评价，让追高、扳回和证明自己变成隐形下单理由。",
+        "practice": "看到盈利截图或错过急拉后，至少等待一轮 K 线或 20 分钟，再重新填写入场理由。"
+      }
+    ],
+    "priorityActions": [
+      {
+        "priority": 1,
+        "title": "先稳住触发",
+        "why": "先在刺激与下单之间留出空间，避免情绪替你完成决策。",
+        "action": "看到别人盈利截图后，至少等待一轮 K 线或 20 分钟，再决定是否行动。"
+      },
+      {
+        "priority": 2,
+        "title": "再锁住仓位",
+        "why": "让任何一次判断都不足以伤害整个账户，也不需要靠下一笔证明自己。",
+        "action": "所有高波动仓位拆成观察仓、确认仓、主仓三段，禁止一次性打满。"
+      },
+      {
+        "priority": 3,
+        "title": "最后机械退出",
+        "why": "把退出写在情绪出现之前，触发后先执行，再复盘。",
+        "action": "价格触发退出线后先执行，再复盘；不要在触发时临场重写故事。"
+      }
+    ],
+    "scenarioGuidance": [
+      {
+        "scenario": "热点突然急拉",
+        "likelyResponse": "紧迫感上升，原本的入场标准容易被“再不上就没了”悄悄改写。",
+        "betterMove": "叙事很强时，先写下一个可验证的反证指标；指标没过，不把热度当入场理由。"
+      },
+      {
+        "scenario": "连续两笔亏损",
+        "likelyResponse": "下一笔交易开始承担“把上一笔赢回来”的任务，判断会变得更快、更重。",
+        "betterMove": "热启动日只允许减仓、记录和观察，禁止用下一笔交易修复上一笔情绪。"
+      },
+      {
+        "scenario": "连续盈利",
+        "likelyResponse": "信心、仓位和点击频率可能同时升温，但证据质量未必同步提高。",
+        "betterMove": "连续盈利后主动降温，至少把本金或部分利润移出高波动仓。"
+      },
+      {
+        "scenario": "没有明确机会",
+        "likelyResponse": "无聊或空仓焦虑可能伪装成机会感，让计划外交易看起来很合理。",
+        "betterMove": "把空仓视为主动仓位：只记录“什么新证据出现时才重新评估”，证据没出现就不靠频繁下单制造反馈。"
+      }
+    ],
+    "trainingRoadmap": [
+      {
+        "period": "7 天",
+        "goal": "把临场感觉写到纸面上",
+        "action": "每笔交易前只写三行：入场理由、失效条件、最大可承受亏损。没有写完，不下单。",
+        "successMetric": "至少 80% 的交易在入场前完成三行记录；本阶段不以盈亏评价自己，只看是否按流程执行。"
+      },
+      {
+        "period": "14 天",
+        "goal": "找到真正驱动你的触发源",
+        "action": "每次想交易时标记来源：晒图、群聊、急拉、回撤、无聊，或原计划信号。",
+        "successMetric": "找出最常导致规则失守的两个触发源，并为「情绪热启动」写下一条冷却动作。"
+      },
+      {
+        "period": "30 天",
+        "goal": "把一条规则练成默认动作",
+        "action": "只优化一个行为维度，不同时更换周期、仓位、标的和信号源；每周固定复盘一次。",
+        "successMetric": "规则执行率持续提高，同时单笔计划亏损不扩大；最终沉淀一份属于「热启冲锋型」的个人交易守则。"
+      }
+    ],
+    "closingNote": "你不需要变成另一个交易者。真正有效的成长，是保留自己的敏锐和行动力，同时用一套在市场最吵时仍然有效的规则保护它。",
     "reportPage": {
       "layout": "full-playbook",
       "visualDesign": {
@@ -200,18 +333,21 @@
         },
         "components": [
           "heroBadge",
+          "warmNarrative",
           "shareCard",
-          "sixAxisMeters",
+          "sixAxisInsights",
+          "scenarioPlaybook",
           "fullPlaybook",
-          "trainingTimeline",
+          "trainingRoadmap",
           "reviewChecklist"
         ]
       },
       "unlockedSections": [
         "完整报告",
-        "六维分数",
+        "六维逐项解释",
+        "情境应对卡",
         "完整交易计划",
-        "训练计划",
+        "可衡量训练路线",
         "分享文案"
       ],
       "lockedSections": []
@@ -236,7 +372,7 @@
   "evidence": {
     "requestId": "full-d211484a1d416251",
     "requestHash": "d211484a1d416251",
-    "resultHash": "48ed8eb6c1cf9ed4"
+    "resultHash": "3abcb598f2ec31b4"
   },
   "disclaimer": "DegenDNA.fun 自研交易人格自查模型，用于娱乐、自我观察和交易行为复盘；不属于 MBTI、Myers-Briggs Type Indicator 或任何第三方授权人格量表，结果不构成投资建议。"
 }

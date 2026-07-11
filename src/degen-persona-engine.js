@@ -323,7 +323,7 @@ export const DEGEN_PERSONA_TYPES = [
 ];
 
 
-export const DEGEN_PERSONA_MODEL_VERSION = "degen-persona-code-v4-normalized-72q";
+export const DEGEN_PERSONA_MODEL_VERSION = "degen-persona-code-v5-enriched-72q";
 export const DEGEN_PERSONA_DISCLAIMER = "DegenDNA.fun 自研交易人格自查模型，用于娱乐、自我观察和交易行为复盘；不属于 MBTI、Myers-Briggs Type Indicator 或任何第三方授权人格量表，结果不构成投资建议。";
 
 const DEGEN_PERSONA_SUBTYPES = {

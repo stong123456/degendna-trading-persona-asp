@@ -717,14 +717,14 @@ function reportUnlocks(mode, lang = "zh") {
   const isEn = lang === "en";
   const unlocks = {
     quick: isEn
-      ? ["Persona code", "two strengths", "two blind spots", "one immediate rule", "share copy"]
-      : ["交易人格码", "2 个优势", "2 个盲区", "1 条立刻可执行规则", "X 分享文案"],
+      ? ["Persona code", "warm first read", "two strengths", "two blind spots", "one immediate rule", "share copy"]
+      : ["交易人格码", "温和的第一判断", "2 个优势", "2 个盲区", "1 条立刻可执行规则", "X 分享文案"],
     standard: isEn
-      ? ["Persona code", "six-dimension profile", "strengths and blind spots", "execution protocol", "light review checklist", "share copy"]
-      : ["交易人格码", "六维画像", "优势与盲区", "执行协议", "轻量复盘清单", "X 分享文案"],
+      ? ["Persona code", "six-dimension explanations", "strengths and blind spots", "three action priorities", "light review checklist", "share copy"]
+      : ["交易人格码", "六维逐项解释", "优势与盲区", "3 个行动优先级", "轻量复盘清单", "X 分享文案"],
     full: isEn
-      ? ["Complete 72-question profile", "six-dimension scores", "full trading plan", "entry/position/exit rules", "7/14/30-day training plan", "share copy"]
-      : ["完整 72 题画像", "六维分数", "完整交易计划", "入场/仓位/退出规则", "7/14/30 天训练计划", "X 分享文案"]
+      ? ["Complete 72-question profile", "six-dimension explanations", "four scenario playbooks", "full trading plan", "measurable 7/14/30-day roadmap", "share copy"]
+      : ["完整 72 题画像", "六维逐项解释", "4 类交易情境应对", "完整交易计划", "可衡量的 7/14/30 天路线", "X 分享文案"]
   };
   return unlocks[normalizeMode(mode)] || unlocks.quick;
 }
@@ -732,6 +732,11 @@ function reportUnlocks(mode, lang = "zh") {
 function reportForLevel(fullResult, persona, level, lang = "zh") {
   const reportLevel = normalizeMode(level, "full");
   const share = shareAssets(fullResult, persona, lang);
+  const narrative = buildReportNarrative(fullResult, persona, reportLevel, lang);
+  const dimensionInsights = buildDimensionInsights(fullResult.dimensions, lang);
+  const priorityActions = buildPriorityActions(fullResult.tradingPlan, lang);
+  const scenarioGuidance = buildScenarioGuidance(fullResult, persona, lang);
+  const trainingRoadmap = buildTrainingRoadmap(fullResult, persona, lang);
   const base = {
     reportLevel,
     reportName: ASSESSMENT_MODES[reportLevel].reportName,
@@ -749,6 +754,7 @@ function reportForLevel(fullResult, persona, level, lang = "zh") {
       intensity: fullResult.intensity?.label,
       confidence: fullResult.confidence?.label
     },
+    narrative,
     ...share
   };
 
@@ -762,6 +768,7 @@ function reportForLevel(fullResult, persona, level, lang = "zh") {
         fullResult.protocol,
         fullResult.tradingPlan?.entryChecklist?.[0]
       ].filter(Boolean).slice(0, 2),
+      immediateAction: priorityActions[0],
       reportPage: reportPageShape("quick", lang),
       upgradeOptions: [publicMode("standard", lang), publicMode("full", lang)]
     };
@@ -775,6 +782,8 @@ function reportForLevel(fullResult, persona, level, lang = "zh") {
       risks: fullResult.risks,
       protocol: fullResult.protocol,
       dimensions: fullResult.dimensions,
+      dimensionInsights,
+      priorityActions,
       tradingPlan: compactTradingPlan(fullResult.tradingPlan, "standard"),
       reportPage: reportPageShape("standard", lang),
       upgradeOptions: [publicMode("full", lang)]
@@ -787,8 +796,211 @@ function reportForLevel(fullResult, persona, level, lang = "zh") {
     reportLevel: "full",
     reportName: ASSESSMENT_MODES.full.reportName,
     classification: base.classification,
+    narrative,
+    dimensionInsights,
+    priorityActions,
+    scenarioGuidance,
+    trainingRoadmap,
+    closingNote: lang === "en"
+      ? "You do not need to become a different trader. The goal is to protect your strengths with rules that still work when the market gets loud."
+      : "你不需要变成另一个交易者。真正有效的成长，是保留自己的敏锐和行动力，同时用一套在市场最吵时仍然有效的规则保护它。",
     reportPage: reportPageShape("full", lang)
   };
+}
+
+function buildReportNarrative(result, persona, level, lang = "zh") {
+  const isEn = lang === "en";
+  const strength = result.strengths?.[0] || (isEn ? "adapt quickly" : "快速适应");
+  const risk = result.risks?.[0] || (isEn ? "repeat a costly pattern" : "重复高成本动作");
+  const primary = [...(result.dimensions || [])].sort((a, b) => b.strength - a.strength)[0];
+  const confidenceNotes = {
+    quick: isEn
+      ? "This 12-question result is an early directional signal. Use it to spot the first risk pattern, not to define yourself."
+      : "这份 12 题结果是一张早期风险雷达。它适合帮你先看见最需要留意的动作，但不需要急着用一个标签定义自己。",
+    standard: isEn
+      ? "The 24-question profile is sufficient for a practical six-axis review. Recheck it after a meaningful change in strategy or market cycle."
+      : "24 题已经能形成可执行的六维轮廓。若你的交易周期、仓位习惯或市场阶段明显变化，建议重新测一次，而不是把结果当成永久身份。",
+    full: isEn
+      ? "The complete sample supports a higher-confidence behavioral profile. It describes recurring preferences, not fixed traits or market skill."
+      : "完整作答让这份画像拥有更高置信度。它描述的是你在压力和机会面前容易重复的偏好，不是能力高低，也不是一成不变的命运。"
+  };
+  return {
+    opening: isEn
+      ? `First, there is nothing inherently wrong with being a ${result.title}. Your instinct to ${strength} is a real trading resource.`
+      : `先说一句重要的：成为「${result.title}」并没有对错。你身上“${strength}”的部分，是市场里很真实、也很珍贵的资源。`,
+    corePattern: isEn
+      ? `Your edge and your blind spot are often powered by the same switch. Under pressure, ${strength} can slide into ${risk}.`
+      : `你的优势和盲区，往往来自同一个按钮。平稳时，它让你${strength}；当热度、盈亏或时间压力放大时，它也可能滑向“${risk}”。`,
+    primarySignal: isEn
+      ? `${primary?.name || "Your primary axis"} currently leans toward ${primary?.direction || "one side"}. Treat that as the first place to add a guardrail.`
+      : `当前最值得优先照顾的是「${primary?.name || "主维度"}」上的“${primary?.direction || "偏好"}”。不是要消灭它，而是先给它加一道可执行的护栏。`,
+    confidenceNote: confidenceNotes[level] || confidenceNotes.quick,
+    reassurance: isEn
+      ? "The goal is not to suppress your instincts. It is to make sure they still serve you when the market becomes noisy."
+      : "你要训练的不是“别有情绪”或“别犯错”，而是在情绪出现、市场变吵的时候，仍然知道下一步该做什么。",
+    subtypeNote: persona.subtype?.description || ""
+  };
+}
+
+function buildDimensionInsights(dimensions, lang = "zh") {
+  const isEn = lang === "en";
+  const zhCopy = {
+    social: {
+      right: ["你对群体注意力和共识升温很敏感，往往能比纯数据型交易者更早感到市场温度变化。", "这让你更容易发现正在形成的机会，也更容易在多人同时兴奋时把线索误当成结论。", "把每条外部观点拆成三栏：它提供了什么线索、我自己的证据是什么、什么情况会证明我错了。"],
+      left: ["你习惯先回到自己的证据和清单，不容易被群聊节奏直接带走。", "独立性保护了判断质量，但也可能让你错过市场注意力已经转向的事实。", "每次形成结论后，主动找一条高质量反方观点，再决定是否调整，而不是为了合群而调整。"]
+    },
+    signal: {
+      right: ["你擅长理解故事、情绪和传播路径，对早期叙事窗口有天然雷达。", "想象空间能帮助你提前站位，也可能让你对反证数据过度宽容。", "每个叙事必须配一条可量化反证指标；指标失效时先降仓，再讨论故事。"],
+      left: ["你更相信数据闭环、资金路径和可验证证据，判断通常有清晰依据。", "严谨能过滤噪音，但等待完美证据可能让学习和试错发生得太晚。", "为尚未闭环但值得观察的机会设置固定小额观察仓，用真实反馈更新判断。"]
+    },
+    execution: {
+      right: ["盘面变化会快速点燃你的行动系统，你能在机会出现时迅速响应。", "高压环境下，你也更容易临场改计划、放宽止损或用下一笔修复上一笔情绪。", "下单前写出最大亏损、加仓条件和撤退线；任一项写不清楚，就先不下单。"],
+      left: ["你倾向按事前规则处理交易，执行稳定性通常优于临场型交易者。", "规则能保护你，也可能在市场结构变化时变成僵硬的安全感。", "保留一条提前定义的小仓弹性规则，让系统允许试探，但不允许临场无限改写。"]
+    },
+    risk: {
+      right: ["你愿意承受波动换取赔率，面对不确定性时不容易因为害怕而完全缺席。", "进攻性是收益弹性的来源，也可能让仓位在兴奋和连续盈利后失去上限。", "高波动仓位统一拆成观察仓、确认仓和主仓，任何时候都不一次性打满。"],
+      left: ["你会先保护本金、流动性和心理承受力，通常更能避免致命错误。", "防守让你活得久，但过度谨慎也可能把“还没完美”变成永远不上车。", "为高置信机会保留固定试错额度，用可承受的小亏换取真实信息。"]
+    },
+    horizon: {
+      right: ["你偏好快速反馈和事件窗口，能及时切换注意力并捕捉阶段性波动。", "速度带来机会，也会放大无聊交易、过度点击和手续费侵蚀。", "给每天设置有效交易次数上限；超过上限后只能记录，不能新开计划外仓位。"],
+      left: ["你能忍受较长验证周期，不容易被短期噪音轻易洗出。", "耐心是优势，但如果没有复核日期，也可能把失效判断包装成长期信仰。", "每个长线假设都写清复核日、失效指标和重新建模条件。"]
+    },
+    validation: {
+      right: ["你对错过、他人战绩和钱包波动较敏感，这让你能迅速感到市场情绪拐点。", "外部反馈也可能进入自我评价，让追高、扳回和证明自己变成隐形下单理由。", "看到盈利截图或错过急拉后，至少等待一轮 K 线或 20 分钟，再重新填写入场理由。"],
+      left: ["你较能把单笔盈亏与自我价值分开，情绪恢复速度和独立判断通常更稳定。", "稳定能减少冲动，但也可能让你低估市场共识变化对价格的真实影响。", "复盘时同时记录过程质量和市场反馈，既不因亏损否定自己，也不因自信忽略变化。"]
+    }
+  };
+
+  return (dimensions || []).map((dimension) => {
+    const side = dimension.score >= 0 ? "right" : "left";
+    const strengthLabel = dimension.strength >= 75
+      ? (isEn ? "high" : "高强度")
+      : dimension.strength >= 50
+        ? (isEn ? "clear" : "明显")
+        : dimension.strength >= 30
+          ? (isEn ? "visible" : "可见")
+          : (isEn ? "light" : "轻微");
+    if (isEn) {
+      return {
+        key: dimension.key,
+        name: dimension.name,
+        direction: dimension.direction,
+        strength: dimension.strength,
+        strengthLabel,
+        observation: `${dimension.name} shows a ${strengthLabel} preference toward ${dimension.direction}.`,
+        watchout: "This preference can be useful in the right environment and costly when stress turns it into an automatic response.",
+        practice: "Define one observable trigger and one pre-committed response before the next trade."
+      };
+    }
+    const copy = zhCopy[dimension.key]?.[side] || [
+      `你在「${dimension.name}」上更接近“${dimension.direction}”。`,
+      "这个偏好既有价值，也需要在压力下被规则保护。",
+      "下一笔交易前，为这个维度写下一条能被观察和执行的规则。"
+    ];
+    return {
+      key: dimension.key,
+      name: dimension.name,
+      direction: dimension.direction,
+      strength: dimension.strength,
+      strengthLabel,
+      observation: copy[0],
+      watchout: copy[1],
+      practice: copy[2]
+    };
+  });
+}
+
+function buildPriorityActions(plan, lang = "zh") {
+  const isEn = lang === "en";
+  const items = [
+    {
+      priority: 1,
+      title: isEn ? "Stabilize the trigger" : "先稳住触发",
+      why: isEn ? "Create space between emotion and action." : "先在刺激与下单之间留出空间，避免情绪替你完成决策。",
+      action: plan?.emotionalProtocol?.[0]
+    },
+    {
+      priority: 2,
+      title: isEn ? "Cap the position" : "再锁住仓位",
+      why: isEn ? "Keep one decision from defining the whole account." : "让任何一次判断都不足以伤害整个账户，也不需要靠下一笔证明自己。",
+      action: plan?.positionRules?.[0]
+    },
+    {
+      priority: 3,
+      title: isEn ? "Make the exit mechanical" : "最后机械退出",
+      why: isEn ? "Decide before the market starts negotiating with you." : "把退出写在情绪出现之前，触发后先执行，再复盘。",
+      action: plan?.exitRules?.[0]
+    }
+  ];
+  return items.filter((item) => item.action);
+}
+
+function buildScenarioGuidance(result, persona, lang = "zh") {
+  const isEn = lang === "en";
+  const plan = result.tradingPlan || {};
+  if (isEn) {
+    return [
+      { scenario: "A token suddenly accelerates", likelyResponse: "Urgency rises and the entry standard becomes easier to rewrite.", betterMove: plan.entryChecklist?.[0] },
+      { scenario: "Two losses in a row", likelyResponse: "The next trade starts carrying the emotional weight of the previous one.", betterMove: plan.emotionalProtocol?.[1] || plan.emotionalProtocol?.[0] },
+      { scenario: "A winning streak", likelyResponse: "Confidence and position size can rise faster than evidence quality.", betterMove: plan.exitRules?.[1] },
+      { scenario: "No clear setup", likelyResponse: "Boredom can disguise itself as opportunity.", betterMove: "Treat staying flat as an active position and write down what evidence would justify re-entry." }
+    ].filter((item) => item.betterMove);
+  }
+  return [
+    {
+      scenario: "热点突然急拉",
+      likelyResponse: "紧迫感上升，原本的入场标准容易被“再不上就没了”悄悄改写。",
+      betterMove: plan.entryChecklist?.[0]
+    },
+    {
+      scenario: "连续两笔亏损",
+      likelyResponse: persona.subtype?.code === "H"
+        ? "下一笔交易开始承担“把上一笔赢回来”的任务，判断会变得更快、更重。"
+        : "你可能把结果波动误认为整个系统失效，急着换策略或证明自己。",
+      betterMove: plan.emotionalProtocol?.[1] || plan.emotionalProtocol?.[0]
+    },
+    {
+      scenario: "连续盈利",
+      likelyResponse: "信心、仓位和点击频率可能同时升温，但证据质量未必同步提高。",
+      betterMove: plan.exitRules?.[1]
+    },
+    {
+      scenario: "没有明确机会",
+      likelyResponse: "无聊或空仓焦虑可能伪装成机会感，让计划外交易看起来很合理。",
+      betterMove: "把空仓视为主动仓位：只记录“什么新证据出现时才重新评估”，证据没出现就不靠频繁下单制造反馈。"
+    }
+  ].filter((item) => item.betterMove);
+}
+
+function buildTrainingRoadmap(result, persona, lang = "zh") {
+  const isEn = lang === "en";
+  if (isEn) {
+    return [
+      { period: "7 days", goal: "Externalize the decision", action: "Before every trade, write the thesis, invalidation, and maximum loss.", successMetric: "At least 80% of trades have all three fields completed before entry." },
+      { period: "14 days", goal: "Identify the trigger", action: "Tag each urge with its source: social proof, acceleration, drawdown, boredom, or planned signal.", successMetric: "Name the two triggers most associated with rule-breaking." },
+      { period: "30 days", goal: "Build one durable rule", action: "Improve only one dimension and keep timeframe, asset universe, and signal source stable.", successMetric: "Rule adherence improves without increasing maximum planned loss." }
+    ];
+  }
+  return [
+    {
+      period: "7 天",
+      goal: "把临场感觉写到纸面上",
+      action: "每笔交易前只写三行：入场理由、失效条件、最大可承受亏损。没有写完，不下单。",
+      successMetric: "至少 80% 的交易在入场前完成三行记录；本阶段不以盈亏评价自己，只看是否按流程执行。"
+    },
+    {
+      period: "14 天",
+      goal: "找到真正驱动你的触发源",
+      action: "每次想交易时标记来源：晒图、群聊、急拉、回撤、无聊，或原计划信号。",
+      successMetric: `找出最常导致规则失守的两个触发源，并为「${persona.subtype?.label || "主要偏好"}」写下一条冷却动作。`
+    },
+    {
+      period: "30 天",
+      goal: "把一条规则练成默认动作",
+      action: "只优化一个行为维度，不同时更换周期、仓位、标的和信号源；每周固定复盘一次。",
+      successMetric: `规则执行率持续提高，同时单笔计划亏损不扩大；最终沉淀一份属于「${result.title}」的个人交易守则。`
+    }
+  ];
 }
 
 function strongestDimensions(result, count) {
@@ -832,15 +1044,15 @@ function reportPageShape(level, lang = "zh") {
       warning: "#ffe08a",
       danger: "#ff8b8b"
     },
-    components: ["heroBadge", "shareCard", "axisMeters", "actionChecklist", "lockedUpgradeRail"]
+    components: ["heroBadge", "warmNarrative", "shareCard", "axisMeters", "actionChecklist", "lockedUpgradeRail"]
   };
   const shapes = {
     quick: {
       layout: "quick-card",
       visualDesign,
       unlockedSections: isEn
-        ? ["persona badge", "top strengths", "top blind spots", "one action rule", "share copy"]
-        : ["人格徽章", "核心优势", "主要盲区", "一条行动规则", "分享文案"],
+        ? ["persona badge", "warm first read", "top strengths", "top blind spots", "one action rule", "share copy"]
+        : ["人格徽章", "温和的第一判断", "核心优势", "主要盲区", "一条行动规则", "分享文案"],
       lockedSections: isEn
         ? ["six-dimension chart", "full review checklist", "7/14/30-day training plan"]
         : ["六维雷达", "完整复盘清单", "7/14/30 天训练计划"]
@@ -849,8 +1061,8 @@ function reportPageShape(level, lang = "zh") {
       layout: "standard-report",
       visualDesign,
       unlockedSections: isEn
-        ? ["persona badge", "six-dimension profile", "protocol", "light trading plan", "share copy"]
-        : ["人格徽章", "六维画像", "执行协议", "轻量交易计划", "分享文案"],
+        ? ["persona badge", "six-dimension explanations", "action priorities", "light trading plan", "share copy"]
+        : ["人格徽章", "六维逐项解释", "行动优先级", "轻量交易计划", "分享文案"],
       lockedSections: isEn
         ? ["full 72-question confidence", "complete entry/position/exit rules", "30-day training plan"]
         : ["完整 72 题置信度", "完整入场/仓位/退出规则", "30 天训练计划"]
@@ -859,11 +1071,11 @@ function reportPageShape(level, lang = "zh") {
       layout: "full-playbook",
       visualDesign: {
         ...visualDesign,
-        components: ["heroBadge", "shareCard", "sixAxisMeters", "fullPlaybook", "trainingTimeline", "reviewChecklist"]
+        components: ["heroBadge", "warmNarrative", "shareCard", "sixAxisInsights", "scenarioPlaybook", "fullPlaybook", "trainingRoadmap", "reviewChecklist"]
       },
       unlockedSections: isEn
-        ? ["complete report", "six-dimension scores", "full trading plan", "training plan", "share copy"]
-        : ["完整报告", "六维分数", "完整交易计划", "训练计划", "分享文案"],
+        ? ["complete report", "six-dimension explanations", "scenario playbooks", "full trading plan", "measurable training roadmap", "share copy"]
+        : ["完整报告", "六维逐项解释", "情境应对卡", "完整交易计划", "可衡量训练路线", "分享文案"],
       lockedSections: []
     }
   };
@@ -875,8 +1087,8 @@ function shareAssets(result, persona, lang = "zh") {
   const risk = result.risks?.[0] || (lang === "en" ? "repeating the same loss pattern" : "重复同一种亏损动作");
   const title = result.title || persona.type?.name || "DegenDNA";
   const oneLineSummary = lang === "en"
-    ? `Your edge is ${strength}; the first thing to train is ${risk}.`
-    : `你的优势是${strength}，最该训练的是${risk}。`;
+    ? `Your edge is ${strength}. The next step is not to suppress it, but to place a guardrail around ${risk}.`
+    : `你最有价值的能力是${strength}；下一步不是压住自己，而是为“${risk}”提前加一道规则。`;
   return {
     shareTitle: lang === "en"
       ? `I am ${persona.profileCode} ${title}`
@@ -884,10 +1096,10 @@ function shareAssets(result, persona, lang = "zh") {
     oneLineSummary,
     shareCardText: lang === "en"
       ? `My DegenDNA: ${persona.profileCode} | ${title} | Edge: ${strength} | Blind spot: ${risk}`
-      : `我的 DegenDNA：${persona.profileCode}｜${title}｜优势：${strength}｜盲区：${risk}`,
+      : `我的 DegenDNA：${persona.profileCode}｜${title}｜我想保留：${strength}｜我会训练：${risk}`,
     twitterCopy: lang === "en"
       ? `I just checked my on-chain trading persona: ${persona.profileCode} ${title}. ${oneLineSummary} This is a behavior review, not financial advice. #OKXAI`
-      : `刚测了一下我的链上交易人格，结果是 ${persona.profileCode} ${title}。${oneLineSummary} 这不是买卖建议，是一次交易行为复盘。#OKXAI`
+      : `刚测了一下我的链上交易人格：${persona.profileCode} ${title}。${oneLineSummary}它不告诉我买什么，只提醒我下一次别再怎样亏。#OKXAI`
   };
 }
 
@@ -1296,6 +1508,70 @@ function renderReportPage(payload, options = {}) {
     .axis small {
       color: var(--muted);
     }
+    .narrative {
+      display: grid;
+      gap: 14px;
+    }
+    .narrative p {
+      margin: 0;
+      color: #dcecf5;
+      line-height: 1.75;
+    }
+    .narrative .opening {
+      color: var(--text);
+      font-size: clamp(18px, 2vw, 24px);
+      font-weight: 750;
+      line-height: 1.55;
+    }
+    .note {
+      border-left: 3px solid var(--cyan);
+      padding: 12px 14px;
+      color: #cfe6f2;
+      background: rgba(67, 231, 255, 0.055);
+      line-height: 1.65;
+    }
+    .insight-list, .scenario-list, .priority-list {
+      display: grid;
+      gap: 14px;
+    }
+    .insight-row, .scenario-row, .priority-row {
+      display: grid;
+      gap: 9px;
+      padding: 16px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .insight-row:first-child, .scenario-row:first-child, .priority-row:first-child { border-top: 0; }
+    .insight-head, .priority-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text);
+      font-weight: 800;
+    }
+    .insight-row p, .scenario-row p, .priority-row p {
+      margin: 0;
+      color: #c9dce7;
+      line-height: 1.65;
+    }
+    .insight-row strong, .scenario-row strong, .priority-row strong { color: var(--cyan); }
+    .practice { color: var(--green) !important; }
+    .roadmap {
+      display: grid;
+      gap: 12px;
+    }
+    .roadmap-step {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr);
+      gap: 16px;
+      padding: 18px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .roadmap-step:first-child { border-top: 0; }
+    .roadmap-period { color: var(--green); font-size: 18px; font-weight: 850; }
+    .roadmap-body { display: grid; gap: 8px; }
+    .roadmap-body strong { color: var(--text); }
+    .roadmap-body p { margin: 0; color: #c9dce7; line-height: 1.6; }
     .plan-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1385,7 +1661,7 @@ function renderReportPage(payload, options = {}) {
       .metric { min-width: 0; }
       .metric:last-child { grid-column: 1 / -1; }
       .grid, .axis-grid, .plan-grid, .upgrade-grid { grid-template-columns: 1fr; }
-      .timeline-item { grid-template-columns: 1fr; }
+      .timeline-item, .roadmap-step { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1406,6 +1682,8 @@ function renderReportPage(payload, options = {}) {
         ${renderMetric(isEn ? "Intensity" : "偏好强度", result.intensity?.label || "-")}
       </div>
     </section>
+
+    ${renderNarrativeSection(result.narrative, isEn)}
 
     <section class="section share-card">
       <h2>${isEn ? "Share card" : "可分享名片"}</h2>
@@ -1429,11 +1707,15 @@ function renderReportPage(payload, options = {}) {
       ${renderAxes(dimensions)}
     </section>
 
+    ${renderDimensionInsightsSection(result.dimensionInsights || [], isEn)}
+    ${renderPrioritySection(result.priorityActions || (result.immediateAction ? [result.immediateAction] : []), isEn, mode)}
     ${renderAdviceSection(result, plan, isEn)}
-    ${renderTrainingSection(plan, isEn)}
+    ${result.trainingRoadmap?.length ? renderTrainingRoadmapSection(result.trainingRoadmap, isEn) : renderTrainingSection(plan, isEn)}
+    ${renderScenarioSection(result.scenarioGuidance || [], isEn)}
     ${renderUnlockedSection(unlocked, isEn)}
     ${renderLockedSection(locked, isEn)}
     ${renderUpgradeSection(result.upgradeOptions || [], isEn)}
+    ${renderClosingSection(result.closingNote, isEn)}
 
     <p class="footer">${escapeHtml(payload.disclaimer || "")}</p>
     <p class="footer">${isEn ? "Preview URL" : "预览地址"}: ${escapeHtml(reportUrl)}</p>
@@ -1463,6 +1745,80 @@ function renderAxes(dimensions) {
       <small>${escapeHtml(dimension.direction || dimension.tag || "")}</small>
     </div>`;
   }).join("")}</div>`;
+}
+
+function renderNarrativeSection(narrative, isEn) {
+  if (!narrative) return "";
+  return `<section class="section">
+    <h2>${isEn ? "Your first read" : "先读懂自己，再谈改变"}</h2>
+    <div class="narrative">
+      ${narrative.opening ? `<p class="opening">${escapeHtml(narrative.opening)}</p>` : ""}
+      ${narrative.corePattern ? `<p>${escapeHtml(narrative.corePattern)}</p>` : ""}
+      ${narrative.primarySignal ? `<p>${escapeHtml(narrative.primarySignal)}</p>` : ""}
+      ${narrative.confidenceNote ? `<div class="note">${escapeHtml(narrative.confidenceNote)}</div>` : ""}
+      ${narrative.reassurance ? `<p>${escapeHtml(narrative.reassurance)}</p>` : ""}
+    </div>
+  </section>`;
+}
+
+function renderDimensionInsightsSection(insights, isEn) {
+  if (!insights?.length) return "";
+  return `<section class="section">
+    <h2>${isEn ? "What each axis means for you" : "六维不是分数，是你会重复的动作"}</h2>
+    <div class="insight-list">${insights.map((insight) => `<div class="insight-row">
+      <div class="insight-head"><span>${escapeHtml(insight.name)} · ${escapeHtml(insight.direction)}</span><span>${escapeHtml(insight.strengthLabel)} ${escapeHtml(insight.strength)}</span></div>
+      <p>${escapeHtml(insight.observation)}</p>
+      <p><strong>${isEn ? "Watch:" : "需要留意："}</strong> ${escapeHtml(insight.watchout)}</p>
+      <p class="practice"><strong>${isEn ? "Practice:" : "建议练习："}</strong> ${escapeHtml(insight.practice)}</p>
+    </div>`).join("")}</div>
+  </section>`;
+}
+
+function renderPrioritySection(actions, isEn, mode) {
+  if (!actions?.length) return "";
+  return `<section class="section">
+    <h2>${isEn ? "Your next priorities" : mode === "quick" ? "今天先做这一件事" : "你的行动优先级"}</h2>
+    <div class="priority-list">${actions.map((item) => `<div class="priority-row">
+      <div class="priority-head"><span>${escapeHtml(item.priority)}. ${escapeHtml(item.title)}</span></div>
+      <p>${escapeHtml(item.why)}</p>
+      <p class="practice"><strong>${isEn ? "Action:" : "具体动作："}</strong> ${escapeHtml(item.action)}</p>
+    </div>`).join("")}</div>
+  </section>`;
+}
+
+function renderScenarioSection(items, isEn) {
+  if (!items?.length) return "";
+  return `<section class="section">
+    <h2>${isEn ? "When the market gets loud" : "当真实行情发生时，你可以这样做"}</h2>
+    <div class="scenario-list">${items.map((item) => `<div class="scenario-row">
+      <strong>${escapeHtml(item.scenario)}</strong>
+      <p>${escapeHtml(item.likelyResponse)}</p>
+      <p class="practice"><strong>${isEn ? "Better move:" : "更好的动作："}</strong> ${escapeHtml(item.betterMove)}</p>
+    </div>`).join("")}</div>
+  </section>`;
+}
+
+function renderTrainingRoadmapSection(items, isEn) {
+  if (!items?.length) return "";
+  return `<section class="section">
+    <h2>${isEn ? "Measurable training roadmap" : "不是喊口号，而是能完成的 7/14/30 天路线"}</h2>
+    <div class="roadmap">${items.map((item) => `<div class="roadmap-step">
+      <div class="roadmap-period">${escapeHtml(item.period)}</div>
+      <div class="roadmap-body">
+        <strong>${escapeHtml(item.goal)}</strong>
+        <p>${escapeHtml(item.action)}</p>
+        <p class="practice"><strong>${isEn ? "Done when:" : "完成标准："}</strong> ${escapeHtml(item.successMetric)}</p>
+      </div>
+    </div>`).join("")}</div>
+  </section>`;
+}
+
+function renderClosingSection(note, isEn) {
+  if (!note) return "";
+  return `<section class="section share-card">
+    <h2>${isEn ? "A final note" : "最后，留给你一句话"}</h2>
+    <p class="share-text">${escapeHtml(note)}</p>
+  </section>`;
 }
 
 function renderAdviceSection(result, plan, isEn) {

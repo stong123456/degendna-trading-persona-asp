@@ -14,6 +14,7 @@
     "promise": "约 1 分钟完成，先判断主要亏损盲区、交易冲动来源和一个可分享人格码。",
     "unlocks": [
       "交易人格码",
+      "温和的第一判断",
       "2 个优势",
       "2 个盲区",
       "1 条立刻可执行规则",
@@ -21,7 +22,7 @@
     ]
   },
   "reportLevel": "quick",
-  "modelVersion": "degen-persona-code-v4-normalized-72q",
+  "modelVersion": "degen-persona-code-v5-enriched-72q",
   "scoring": {
     "method": "dimension-mean-normalized-v1",
     "normalizedToQuestionCount": {
@@ -67,10 +68,18 @@
       "intensity": "可见偏好",
       "confidence": "初步倾向"
     },
+    "narrative": {
+      "opening": "先说一句重要的：成为「共识共振型」并没有对错。你身上“信息流广”的部分，是市场里很真实、也很珍贵的资源。",
+      "corePattern": "你的优势和盲区，往往来自同一个按钮。平稳时，它让你信息流广；当热度、盈亏或时间压力放大时，它也可能滑向“容易被晒图和喊单影响”。",
+      "primarySignal": "当前最值得优先照顾的是「风险承受力」上的“风控防守”。不是要消灭它，而是先给它加一道可执行的护栏。",
+      "confidenceNote": "这份 12 题结果是一张早期风险雷达。它适合帮你先看见最需要留意的动作，但不需要急着用一个标签定义自己。",
+      "reassurance": "你要训练的不是“别有情绪”或“别犯错”，而是在情绪出现、市场变吵的时候，仍然知道下一步该做什么。",
+      "subtypeNote": "你对市场注意力和叙事斜率非常敏感。优势是能踩到热度，风险是退潮时不够机械。"
+    },
     "shareTitle": "我是 ECHO-ELP-SFH-W2 共识共振型",
-    "oneLineSummary": "你的优势是信息流广，最该训练的是容易被晒图和喊单影响。",
-    "shareCardText": "我的 DegenDNA：ECHO-ELP-SFH-W2｜共识共振型｜优势：信息流广｜盲区：容易被晒图和喊单影响",
-    "twitterCopy": "刚测了一下我的链上交易人格，结果是 ECHO-ELP-SFH-W2 共识共振型。你的优势是信息流广，最该训练的是容易被晒图和喊单影响。 这不是买卖建议，是一次交易行为复盘。#OKXAI",
+    "oneLineSummary": "你最有价值的能力是信息流广；下一步不是压住自己，而是为“容易被晒图和喊单影响”提前加一道规则。",
+    "shareCardText": "我的 DegenDNA：ECHO-ELP-SFH-W2｜共识共振型｜我想保留：信息流广｜我会训练：容易被晒图和喊单影响",
+    "twitterCopy": "刚测了一下我的链上交易人格：ECHO-ELP-SFH-W2 共识共振型。你最有价值的能力是信息流广；下一步不是压住自己，而是为“容易被晒图和喊单影响”提前加一道规则。它不告诉我买什么，只提醒我下一次别再怎样亏。#OKXAI",
     "strengths": [
       "信息流广",
       "能感知共识形成"
@@ -99,6 +108,12 @@
       "把社群观点分成线索而不是结论，所有入场都必须通过个人检查清单。",
       "叙事很强时，先写下一个可验证的反证指标；指标没过，不把热度当入场理由。"
     ],
+    "immediateAction": {
+      "priority": 1,
+      "title": "先稳住触发",
+      "why": "先在刺激与下单之间留出空间，避免情绪替你完成决策。",
+      "action": "看到别人盈利截图后，至少等待一轮 K 线或 20 分钟，再决定是否行动。"
+    },
     "reportPage": {
       "layout": "quick-card",
       "visualDesign": {
@@ -114,6 +129,7 @@
         },
         "components": [
           "heroBadge",
+          "warmNarrative",
           "shareCard",
           "axisMeters",
           "actionChecklist",
@@ -122,6 +138,7 @@
       },
       "unlockedSections": [
         "人格徽章",
+        "温和的第一判断",
         "核心优势",
         "主要盲区",
         "一条行动规则",
@@ -147,9 +164,9 @@
         "promise": "覆盖六个维度的核心偏好，生成优势、盲区、执行协议和轻量复盘清单。",
         "unlocks": [
           "交易人格码",
-          "六维画像",
+          "六维逐项解释",
           "优势与盲区",
-          "执行协议",
+          "3 个行动优先级",
           "轻量复盘清单",
           "X 分享文案"
         ]
@@ -167,10 +184,10 @@
         "promise": "完整 72 题画像，生成六维雷达、盲区、复盘清单、7/14/30 天训练计划和分享文案。",
         "unlocks": [
           "完整 72 题画像",
-          "六维分数",
+          "六维逐项解释",
+          "4 类交易情境应对",
           "完整交易计划",
-          "入场/仓位/退出规则",
-          "7/14/30 天训练计划",
+          "可衡量的 7/14/30 天路线",
           "X 分享文案"
         ]
       }
@@ -187,7 +204,7 @@
   "evidence": {
     "requestId": "quick-fcc6ff8c4c4557f8",
     "requestHash": "fcc6ff8c4c4557f8",
-    "resultHash": "9f014491a991ed5d"
+    "resultHash": "23a9f54fbc053448"
   },
   "disclaimer": "DegenDNA.fun 自研交易人格自查模型，用于娱乐、自我观察和交易行为复盘；不属于 MBTI、Myers-Briggs Type Indicator 或任何第三方授权人格量表，结果不构成投资建议。"
 }
