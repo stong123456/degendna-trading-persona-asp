@@ -1282,6 +1282,14 @@ function renderReportPage(payload, options = {}) {
   const locked = result.reportPage?.lockedSections || [];
   const unlocked = result.reportPage?.unlockedSections || [];
   const reportUrl = `${baseUrl}/report/demo?mode=${mode}&lang=${lang}`;
+  const navItems = [
+    ["overview", isEn ? "Overview" : "先读结论"],
+    ["axes", isEn ? "Profile" : mode === "quick" ? "主导维度" : "六维画像"],
+    ["actions", isEn ? "Actions" : "行动优先级"],
+    ["playbook", isEn ? "Playbook" : "交易行动卡"],
+    ...(result.trainingRoadmap?.length || plan.trainingPlan?.length ? [["training", isEn ? "Training" : "训练路线"]] : []),
+    ...(result.scenarioGuidance?.length ? [["scenarios", isEn ? "Scenarios" : "行情应对"]] : [])
+  ];
 
   return `<!doctype html>
 <html lang="${isEn ? "en" : "zh-CN"}">
@@ -1644,51 +1652,388 @@ function renderReportPage(payload, options = {}) {
       line-height: 1.6;
       text-align: center;
     }
-    @media (max-width: 820px) {
-      .page { width: min(100% - 20px, 560px); padding-top: 10px; }
-      .hero {
-        min-height: 520px;
-        background:
-          linear-gradient(180deg, rgba(9, 18, 28, 0.88), rgba(9, 13, 20, 0.98)),
-          url("/assets/degendna-logo.png") center -70px / 360px auto no-repeat;
-        padding-top: 240px;
+    body.report-quick { --tier: var(--cyan); }
+    body.report-standard { --tier: var(--green); }
+    body.report-full { --tier: var(--gold); }
+    html { scroll-behavior: smooth; }
+    body {
+      background:
+        linear-gradient(rgba(67, 231, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 231, 255, 0.035) 1px, transparent 1px),
+        #05080c;
+      background-size: 40px 40px;
+    }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid var(--tier);
+      outline-offset: 3px;
+    }
+    .page { width: min(1160px, calc(100vw - 36px)); padding-top: 20px; }
+    .hero {
+      min-height: 0;
+      padding: 0;
+      background:
+        radial-gradient(circle at 82% 22%, rgba(67, 231, 255, 0.11), transparent 30%),
+        linear-gradient(140deg, rgba(9, 17, 24, 0.98), rgba(4, 8, 12, 0.98));
+      border-color: color-mix(in srgb, var(--tier) 34%, transparent);
+    }
+    .hero:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--tier) 8%, transparent), transparent 46%);
+    }
+    .hero-shell {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
+      gap: 48px;
+      align-items: stretch;
+      padding: 42px;
+    }
+    .hero-copy { min-width: 0; }
+    .tier-row { margin-top: 38px; }
+    .pill {
+      border-color: color-mix(in srgb, var(--tier) 36%, transparent);
+      color: var(--tier);
+      background: color-mix(in srgb, var(--tier) 8%, transparent);
+    }
+    .hero-label {
+      margin: 42px 0 0;
+      color: var(--tier);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 700px;
+      margin-top: 12px;
+      font-size: 64px;
+      line-height: 1.05;
+    }
+    .lead { max-width: 720px; font-size: 20px; }
+    .hero-bottom { margin-top: 30px; }
+    .metric {
+      min-width: 136px;
+      border-color: rgba(255, 255, 255, 0.09);
+      background: rgba(0, 0, 0, 0.24);
+    }
+    .metric strong { font-size: 18px; }
+    .persona-seal {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 30px;
+      overflow: hidden;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.045));
+    }
+    .persona-seal img {
+      position: absolute;
+      width: 330px;
+      height: 330px;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      object-fit: contain;
+      opacity: 0.42;
+      filter: saturate(0.9);
+    }
+    .persona-seal span, .persona-seal strong, .persona-seal small { position: relative; z-index: 1; }
+    .persona-seal span {
+      color: var(--tier);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+    }
+    .persona-seal strong {
+      max-width: 100%;
+      margin-top: 10px;
+      color: var(--text);
+      font-size: 24px;
+      line-height: 1.18;
+      overflow-wrap: anywhere;
+    }
+    .persona-seal small { margin-top: 12px; color: var(--muted); line-height: 1.5; }
+    .report-nav {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+      display: flex;
+      gap: 4px;
+      margin-top: 14px;
+      padding: 7px;
+      overflow-x: auto;
+      border: 1px solid rgba(128, 231, 255, 0.15);
+      border-radius: 8px;
+      background: rgba(5, 10, 15, 0.93);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(14px);
+      scrollbar-width: none;
+    }
+    .report-nav::-webkit-scrollbar { display: none; }
+    .report-nav a {
+      display: inline-flex;
+      flex: 1 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: #c6d9e4;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .report-nav a:hover { color: var(--text); background: rgba(255, 255, 255, 0.055); }
+    .report-nav a span { color: var(--tier); font-size: 10px; letter-spacing: 0.05em; }
+    .section {
+      scroll-margin-top: 76px;
+      margin-top: 0;
+      padding: 38px 0;
+      border: 0;
+      border-top: 1px solid rgba(128, 231, 255, 0.14);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .section h2 {
+      margin-bottom: 22px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+    .section h2:before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      margin-right: 10px;
+      vertical-align: -2px;
+      border-radius: 2px;
+      background: var(--tier);
+    }
+    .grid {
+      gap: 14px;
+      margin-top: 0;
+      padding: 38px 0;
+      border-top: 1px solid rgba(128, 231, 255, 0.14);
+    }
+    .grid .section {
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .grid .section:first-child { border-color: rgba(124, 255, 178, 0.2); }
+    .grid .section:last-child { border-color: rgba(255, 139, 139, 0.22); }
+    .share-card {
+      margin: 16px 0 38px;
+      padding: 26px;
+      border: 1px solid color-mix(in srgb, var(--tier) 24%, transparent);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--tier) 9%, transparent), transparent 58%),
+        rgba(11, 18, 26, 0.88);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+    }
+    .share-text { max-width: 900px; font-size: 25px; }
+    .share-copy {
+      max-width: 940px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.18);
+      color: #b9ccd8;
+    }
+    .share-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+    .share-actions button {
+      min-height: 38px;
+      padding: 9px 13px;
+      border: 1px solid color-mix(in srgb, var(--tier) 32%, transparent);
+      border-radius: 6px;
+      color: var(--text);
+      background: color-mix(in srgb, var(--tier) 8%, rgba(0, 0, 0, 0.3));
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .share-actions button:hover { background: color-mix(in srgb, var(--tier) 14%, rgba(0, 0, 0, 0.3)); }
+    .copy-status { min-height: 20px; color: var(--green); font-size: 13px; }
+    .narrative { grid-template-columns: minmax(0, 1.7fr) minmax(240px, 0.7fr); align-items: start; }
+    .narrative .opening { grid-column: 1 / -1; max-width: 940px; font-size: 27px; }
+    .narrative .note {
+      grid-column: 2;
+      grid-row: 2 / span 3;
+      border: 1px solid color-mix(in srgb, var(--tier) 24%, transparent);
+      border-left-width: 4px;
+      border-radius: 0 7px 7px 0;
+      background: color-mix(in srgb, var(--tier) 6%, transparent);
+    }
+    .axis-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .axis { padding: 17px; background: rgba(255, 255, 255, 0.025); }
+    .axis-head span:last-child { color: var(--tier); font-size: 22px; }
+    .bar { height: 7px; }
+    .bar i { background: linear-gradient(90deg, var(--cyan), var(--tier)); }
+    .axis small { font-size: 13px; }
+    .insight-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .insight-row {
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.085);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.024);
+    }
+    .insight-row:first-child { border-top: 1px solid rgba(255, 255, 255, 0.085); }
+    .insight-head span:last-child {
+      padding: 4px 8px;
+      border-radius: 999px;
+      color: var(--tier);
+      background: color-mix(in srgb, var(--tier) 8%, transparent);
+      font-size: 12px;
+    }
+    .priority-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .priority-row {
+      position: relative;
+      min-height: 220px;
+      padding: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      background: linear-gradient(145deg, color-mix(in srgb, var(--tier) 6%, transparent), rgba(255, 255, 255, 0.018));
+    }
+    .priority-row:first-child { border-top: 1px solid rgba(255, 255, 255, 0.09); }
+    .priority-head { color: var(--text); font-size: 18px; }
+    .priority-row .practice { margin-top: auto; }
+    .scenario-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .scenario-row {
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.024);
+    }
+    .scenario-row:first-child { border-top: 1px solid rgba(255, 255, 255, 0.09); }
+    .scenario-row > strong { font-size: 17px; }
+    .roadmap { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .roadmap-step {
+      grid-template-columns: 1fr;
+      align-content: start;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-top: 3px solid var(--tier);
+      border-radius: 0 0 8px 8px;
+      background: rgba(255, 255, 255, 0.024);
+    }
+    .roadmap-step:first-child { border-top: 3px solid var(--tier); }
+    .roadmap-period { font-size: 25px; color: var(--tier); }
+    .plan-block { background: rgba(255, 224, 138, 0.028); }
+    .lock-list { gap: 8px; }
+    .lock { border-style: solid; background: rgba(255, 255, 255, 0.025); }
+    .upgrade { background: rgba(67, 231, 255, 0.025); }
+    @media print {
+      body { background: #fff; color: #111; }
+      .page { width: 100%; }
+      .report-nav, .share-actions, .footer:last-child { display: none; }
+      .hero, .share-card, .grid .section, .axis, .insight-row, .priority-row, .scenario-row, .roadmap-step, .plan-block {
+        box-shadow: none;
+        break-inside: avoid;
       }
-      .tier-row { margin-top: 0; }
+    }
+    @media (max-width: 820px) {
+      .page { width: min(100% - 20px, 600px); padding-top: 10px; }
+      .hero {
+        min-height: 0;
+        background: linear-gradient(180deg, rgba(9, 18, 28, 0.98), rgba(5, 9, 14, 0.98));
+      }
+      .hero-shell { grid-template-columns: 1fr; gap: 24px; padding: 22px; }
+      .hero-copy { display: contents; }
+      .brand { order: 1; }
+      .persona-seal {
+        order: 2;
+        min-height: 205px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+      }
+      .persona-seal img { width: 230px; height: 230px; top: -42px; left: auto; right: -18px; transform: none; }
+      .persona-seal strong { max-width: 62%; font-size: 21px; }
+      .tier-row { order: 3; margin-top: 0; }
+      .hero-label { order: 4; margin-top: 4px; }
+      h1 { order: 5; margin-top: -12px; font-size: 40px; line-height: 1.08; }
+      .lead { order: 6; margin-top: -10px; font-size: 17px; }
+      .hero-bottom { order: 7; margin-top: -4px; }
       .hero-bottom {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .metric { min-width: 0; }
       .metric:last-child { grid-column: 1 / -1; }
-      .grid, .axis-grid, .plan-grid, .upgrade-grid { grid-template-columns: 1fr; }
+      .report-nav { top: 6px; margin-top: 10px; }
+      .section { padding: 30px 0; }
+      .section h2 { font-size: 20px; }
+      .grid { padding: 30px 0; }
+      .share-card { margin: 10px 0 30px; padding: 20px; }
+      .share-text { font-size: 20px; }
+      .narrative { grid-template-columns: 1fr; }
+      .narrative .opening, .narrative .note { grid-column: auto; grid-row: auto; }
+      .narrative .opening { font-size: 22px; }
+      .grid, .axis-grid, .plan-grid, .upgrade-grid, .insight-list, .priority-list, .scenario-list, .roadmap { grid-template-columns: 1fr; }
+      .priority-row { min-height: 0; }
       .timeline-item, .roadmap-step { grid-template-columns: 1fr; }
     }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   </style>
 </head>
-<body>
+<body class="report-${mode}">
   <main class="page">
     <section class="hero">
-      <div class="brand"><img src="/assets/degendna-logo.png" alt="DegenDNA logo"><span>DegenDNA Trading Persona</span></div>
-      <div class="tier-row">
-        <span class="pill">${escapeHtml(modeConfig.reportName)}</span>
-        <span class="pill">${escapeHtml(paymentPriceForMode(mode))}</span>
-        ${options.demo ? `<span class="pill">${isEn ? "Demo report" : "演示报告"}</span>` : ""}
-      </div>
-      <h1>${escapeHtml(result.shareTitle || result.title || "DegenDNA")}</h1>
-      <p class="lead">${escapeHtml(result.oneLineSummary || result.summary || modeConfig.promise)}</p>
-      <div class="hero-bottom">
-        ${renderMetric(isEn ? "Profile code" : "人格码", result.code || payload.code || "-")}
-        ${renderMetric(isEn ? "Confidence" : "置信度", result.confidence?.label || "-")}
-        ${renderMetric(isEn ? "Intensity" : "偏好强度", result.intensity?.label || "-")}
+      <div class="hero-shell">
+        <div class="hero-copy">
+          <div class="brand"><img src="/assets/degendna-logo.png" alt="DegenDNA logo"><span>DegenDNA Trading Persona</span></div>
+          <div class="tier-row">
+            <span class="pill">${escapeHtml(modeConfig.reportName)}</span>
+            <span class="pill">${escapeHtml(paymentPriceForMode(mode))}</span>
+            ${options.demo ? `<span class="pill">${isEn ? "Demo report" : "演示报告"}</span>` : ""}
+          </div>
+          <p class="hero-label">${isEn ? "My onchain trading persona" : "我的链上交易人格"}</p>
+          <h1>${escapeHtml(result.title || result.shareTitle || "DegenDNA")}</h1>
+          <p class="lead">${escapeHtml(result.oneLineSummary || result.summary || modeConfig.promise)}</p>
+          <div class="hero-bottom">
+            ${renderMetric(isEn ? "Confidence" : "置信度", result.confidence?.label || "-")}
+            ${renderMetric(isEn ? "Preference" : "偏好强度", result.intensity?.label || "-")}
+            ${renderMetric(isEn ? "Questions" : "作答深度", `${modeConfig.questionCount}`)}
+          </div>
+        </div>
+        <aside class="persona-seal" aria-label="${isEn ? "Persona certificate" : "人格证书"}">
+          <img src="/assets/degendna-logo.png" alt="">
+          <span>${isEn ? "PERSONA CODE" : "原创人格码"}</span>
+          <strong>${escapeHtml(result.code || payload.code || "-")}</strong>
+          <small>${isEn ? "Behavior, not destiny" : "看见偏好，不给自己贴死标签"}</small>
+        </aside>
       </div>
     </section>
 
+    <nav class="report-nav" aria-label="${isEn ? "Report sections" : "报告章节"}">
+      ${navItems.map(([href, label], index) => `<a href="#${href}"><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(label)}</a>`).join("")}
+    </nav>
+
     ${renderNarrativeSection(result.narrative, isEn)}
 
-    <section class="section share-card">
+    <section class="section share-card" id="share">
       <h2>${isEn ? "Share card" : "可分享名片"}</h2>
       <p class="share-text">${escapeHtml(result.shareCardText || result.oneLineSummary || "")}</p>
-      <div class="share-copy">${escapeHtml(result.twitterCopy || "")}</div>
+      <div class="share-copy" data-share-copy>${escapeHtml(result.twitterCopy || "")}</div>
+      <div class="share-actions">
+        <button type="button" data-copy-share>${isEn ? "Copy share text" : "复制分享文案"}</button>
+        <button type="button" data-print-report>${isEn ? "Print report" : "打印 / 保存报告"}</button>
+        <span class="copy-status" data-copy-status aria-live="polite"></span>
+      </div>
     </section>
 
     <div class="grid">
@@ -1702,7 +2047,7 @@ function renderReportPage(payload, options = {}) {
       </section>
     </div>
 
-    <section class="section">
+    <section class="section" id="axes">
       <h2>${isEn ? "Behavior axes" : mode === "quick" ? "主导维度" : "六维画像"}</h2>
       ${renderAxes(dimensions)}
     </section>
@@ -1720,6 +2065,40 @@ function renderReportPage(payload, options = {}) {
     <p class="footer">${escapeHtml(payload.disclaimer || "")}</p>
     <p class="footer">${isEn ? "Preview URL" : "预览地址"}: ${escapeHtml(reportUrl)}</p>
   </main>
+  <script>
+    const copyButton = document.querySelector("[data-copy-share]");
+    const copySource = document.querySelector("[data-share-copy]");
+    const copyStatus = document.querySelector("[data-copy-status]");
+    copyButton?.addEventListener("click", async () => {
+      const text = copySource?.textContent?.trim() || "";
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
+        await navigator.clipboard.writeText(text);
+        copyStatus.textContent = ${JSON.stringify(isEn ? "Copied" : "已复制")};
+      } catch {
+        const fallback = document.createElement("textarea");
+        fallback.value = text;
+        fallback.setAttribute("readonly", "");
+        fallback.style.position = "fixed";
+        fallback.style.opacity = "0";
+        document.body.appendChild(fallback);
+        fallback.select();
+        const copied = document.execCommand("copy");
+        fallback.remove();
+        if (copied) {
+          copyStatus.textContent = ${JSON.stringify(isEn ? "Copied" : "已复制")};
+        } else {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(copySource);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          copyStatus.textContent = ${JSON.stringify(isEn ? "Text selected. Press Ctrl+C to copy." : "文案已选中，请按 Ctrl+C 复制")};
+        }
+      }
+    });
+    document.querySelector("[data-print-report]")?.addEventListener("click", () => window.print());
+  </script>
 </body>
 </html>`;
 }
@@ -1749,7 +2128,7 @@ function renderAxes(dimensions) {
 
 function renderNarrativeSection(narrative, isEn) {
   if (!narrative) return "";
-  return `<section class="section">
+  return `<section class="section" id="overview">
     <h2>${isEn ? "Your first read" : "先读懂自己，再谈改变"}</h2>
     <div class="narrative">
       ${narrative.opening ? `<p class="opening">${escapeHtml(narrative.opening)}</p>` : ""}
@@ -1776,7 +2155,7 @@ function renderDimensionInsightsSection(insights, isEn) {
 
 function renderPrioritySection(actions, isEn, mode) {
   if (!actions?.length) return "";
-  return `<section class="section">
+  return `<section class="section" id="actions">
     <h2>${isEn ? "Your next priorities" : mode === "quick" ? "今天先做这一件事" : "你的行动优先级"}</h2>
     <div class="priority-list">${actions.map((item) => `<div class="priority-row">
       <div class="priority-head"><span>${escapeHtml(item.priority)}. ${escapeHtml(item.title)}</span></div>
@@ -1788,7 +2167,7 @@ function renderPrioritySection(actions, isEn, mode) {
 
 function renderScenarioSection(items, isEn) {
   if (!items?.length) return "";
-  return `<section class="section">
+  return `<section class="section" id="scenarios">
     <h2>${isEn ? "When the market gets loud" : "当真实行情发生时，你可以这样做"}</h2>
     <div class="scenario-list">${items.map((item) => `<div class="scenario-row">
       <strong>${escapeHtml(item.scenario)}</strong>
@@ -1800,7 +2179,7 @@ function renderScenarioSection(items, isEn) {
 
 function renderTrainingRoadmapSection(items, isEn) {
   if (!items?.length) return "";
-  return `<section class="section">
+  return `<section class="section" id="training">
     <h2>${isEn ? "Measurable training roadmap" : "不是喊口号，而是能完成的 7/14/30 天路线"}</h2>
     <div class="roadmap">${items.map((item) => `<div class="roadmap-step">
       <div class="roadmap-period">${escapeHtml(item.period)}</div>
@@ -1829,7 +2208,7 @@ function renderAdviceSection(result, plan, isEn) {
     { title: isEn ? "Exit" : "退出纪律", items: plan.exitRules || [] }
   ].filter((block) => block.items?.length);
   if (!blocks.length) return "";
-  return `<section class="section">
+  return `<section class="section" id="playbook">
     <h2>${isEn ? "Trading playbook" : "交易行动卡"}</h2>
     ${plan.headline ? `<p class="share-copy">${escapeHtml(plan.headline)}</p>` : ""}
     <div class="plan-grid">${blocks.map((block) => `<div class="plan-block"><h3>${escapeHtml(block.title)}</h3>${renderList(block.items)}</div>`).join("")}</div>
@@ -1839,7 +2218,7 @@ function renderAdviceSection(result, plan, isEn) {
 function renderTrainingSection(plan, isEn) {
   const items = plan.trainingPlan || [];
   if (!items.length) return "";
-  return `<section class="section">
+  return `<section class="section" id="training">
     <h2>${isEn ? "Training rhythm" : "训练节奏"}</h2>
     <div class="timeline">${items.map((item, index) => {
       const label = index === 0 ? "7D" : index === 1 ? "14D" : "30D";
