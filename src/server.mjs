@@ -559,8 +559,11 @@ function scorePayload(body, lang = "zh", options = {}) {
   const reportLevel = normalizeMode(options.reportLevel || mode, mode);
   const answers = answersForMode(body?.answers || body, mode);
   const persona = computeDegenPersonaResultFromAnswers(answers);
-  if (persona.answeredCount < 12) {
-    throw new Error("At least 12 valid answers are required for a stable profile.");
+  const requiredAnswerCount = ASSESSMENT_MODES[mode].questionCount;
+  if (persona.answeredCount < requiredAnswerCount) {
+    throw new Error(lang === "en"
+      ? `Complete all ${requiredAnswerCount} answers for the ${mode} report. Received ${persona.answeredCount}.`
+      : `${ASSESSMENT_MODES[mode].name}需要完整提交 ${requiredAnswerCount} 个答案，当前收到 ${persona.answeredCount} 个有效答案。`);
   }
   const fullResult = buildDegenPersonaSummary(persona, lang);
   const result = reportForLevel(fullResult, persona, reportLevel, lang);
@@ -571,6 +574,7 @@ function scorePayload(body, lang = "zh", options = {}) {
     mode: publicMode(mode, lang),
     reportLevel,
     modelVersion: persona.modelVersion,
+    scoring: persona.scoring,
     result,
     scores: reportLevel === "quick" ? undefined : persona.scores,
     code: persona.code,
@@ -638,7 +642,8 @@ function answersPreviewPayload(body, lang = "zh", mode = "quick") {
     language: lang,
     mode: publicMode(modeKey, lang),
     answeredCount: persona.answeredCount,
-    enoughForPaidReport: persona.answeredCount >= 12,
+    requiredAnswerCount: ASSESSMENT_MODES[modeKey].questionCount,
+    enoughForPaidReport: persona.answeredCount >= ASSESSMENT_MODES[modeKey].questionCount,
     message: lang === "en"
       ? "Answers were accepted for calibration. Purchase a paid score route to unlock the persona code and report."
       : "答案已用于校准预览。人格码和完整报告需要通过对应付费评分接口解锁。",
@@ -910,10 +915,7 @@ function answersForMode(input, mode) {
       ? source[modeIndex]
       : source[`degenPersona:${questionIndex}`]
         ?? source[questionIndex]
-        ?? source[String(questionIndex)]
-        ?? source[`degenPersona:${modeIndex}`]
-        ?? source[modeIndex]
-        ?? source[String(modeIndex)];
+        ?? source[String(questionIndex)];
     if (value !== undefined) mapped[`degenPersona:${questionIndex}`] = value;
   });
   return mapped;
@@ -1038,10 +1040,18 @@ function stableStringify(value) {
 }
 
 function sampleAnswersForMode(mode) {
-  const pattern = [1.2, 0.35, -1.2, 2, -0.35, 1.2, -2, 0.35, 1.2, -0.35, 2, -1.2];
+  const dimensionProfile = {
+    social: 1.2,
+    signal: 1.2,
+    execution: 2,
+    risk: 1.2,
+    horizon: 1.2,
+    validation: 2
+  };
   const answers = {};
-  questionIndexesForMode(mode).forEach((questionIndex, offset) => {
-    answers[`degenPersona:${questionIndex}`] = pattern[offset % pattern.length];
+  questionIndexesForMode(mode).forEach((questionIndex) => {
+    const question = DEGEN_PERSONA_QUESTIONS[questionIndex];
+    answers[`degenPersona:${questionIndex}`] = dimensionProfile[question.dim] ?? 0.35;
   });
   return answers;
 }

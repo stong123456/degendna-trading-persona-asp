@@ -1,50 +1,102 @@
 {
   "ok": true,
   "service": "degendna-trading-persona",
-  "reportLevel": "quick",
   "mode": {
     "key": "quick",
     "name": "极速版",
+    "serviceName": "测出我的链上交易人格·极速版",
     "reportName": "12题速测卡",
     "questionCount": 12,
-    "price": "$0.10"
+    "priceUsd": 0.1,
+    "price": "$0.10",
+    "questionnaire": "/api/asp/trading-persona?mode=quick",
+    "endpoint": "/api/asp/trading-persona/score/quick",
+    "promise": "约 1 分钟完成，先判断主要亏损盲区、交易冲动来源和一个可分享人格码。",
+    "unlocks": [
+      "交易人格码",
+      "2 个优势",
+      "2 个盲区",
+      "1 条立刻可执行规则",
+      "X 分享文案"
+    ]
+  },
+  "reportLevel": "quick",
+  "modelVersion": "degen-persona-code-v4-normalized-72q",
+  "scoring": {
+    "method": "dimension-mean-normalized-v1",
+    "normalizedToQuestionCount": {
+      "social": 12,
+      "signal": 12,
+      "execution": 12,
+      "risk": 12,
+      "horizon": 12,
+      "validation": 12
+    },
+    "answerRange": [
+      -2,
+      2
+    ]
   },
   "result": {
     "reportLevel": "quick",
     "reportName": "12题速测卡",
-    "title": "均衡复盘型",
-    "code": "BAL-ELP-SFH-C1",
+    "abbr": "ECHO",
+    "title": "共识共振型",
+    "code": "ECHO-ELP-SFH-W2",
     "axisCode": "ELP-SFH",
-    "classification": {
-      "primaryType": "均衡复盘型",
-      "subtype": "核心均衡",
-      "intensity": "轻偏好",
-      "confidence": "样本偏少"
+    "subtype": {
+      "code": "W",
+      "name": "追浪",
+      "label": "共识追浪",
+      "description": "你对市场注意力和叙事斜率非常敏感。优势是能踩到热度，风险是退潮时不够机械。"
     },
-    "shareTitle": "我是 BAL-ELP-SFH-C1 均衡复盘型",
-    "oneLineSummary": "你的优势是可塑性强，最该训练的是优势不够尖锐。",
-    "shareCardText": "我的 DegenDNA：BAL-ELP-SFH-C1｜均衡复盘型｜优势：可塑性强｜盲区：优势不够尖锐",
-    "twitterCopy": "刚测了一下我的链上交易人格，结果是 BAL-ELP-SFH-C1 均衡复盘型。你的优势是可塑性强，最该训练的是优势不够尖锐。 这不是买卖建议，是一次交易行为复盘。#OKXAI",
-    "strengths": ["可塑性强", "不容易单点失控"],
-    "risks": ["优势不够尖锐", "容易在不同策略间摇摆"],
+    "intensity": {
+      "tier": 2,
+      "score": 27,
+      "label": "可见偏好"
+    },
+    "confidence": {
+      "score": 23,
+      "label": "初步倾向",
+      "sampleCoverage": 0.1667
+    },
+    "summary": "你的交易人格更接近「共识共振型」（ECHO-ELP-SFH-W2）。当前最突出的维度是「风险承受力」与「机会敏感度」，细分后缀为「共识追浪 · 可见偏好」，适合用作交易行为复盘，而不是投资建议。",
+    "classification": {
+      "primaryType": "共识共振型",
+      "subtype": "共识追浪",
+      "intensity": "可见偏好",
+      "confidence": "初步倾向"
+    },
+    "shareTitle": "我是 ECHO-ELP-SFH-W2 共识共振型",
+    "oneLineSummary": "你的优势是信息流广，最该训练的是容易被晒图和喊单影响。",
+    "shareCardText": "我的 DegenDNA：ECHO-ELP-SFH-W2｜共识共振型｜优势：信息流广｜盲区：容易被晒图和喊单影响",
+    "twitterCopy": "刚测了一下我的链上交易人格，结果是 ECHO-ELP-SFH-W2 共识共振型。你的优势是信息流广，最该训练的是容易被晒图和喊单影响。 这不是买卖建议，是一次交易行为复盘。#OKXAI",
+    "strengths": [
+      "信息流广",
+      "能感知共识形成"
+    ],
+    "risks": [
+      "容易被晒图和喊单影响",
+      "独立验证不足"
+    ],
     "mainDimensions": [
       {
         "key": "risk",
         "name": "风险承受力",
         "direction": "风控防守",
-        "strength": 17,
+        "strength": 41,
         "tag": "SHIELD"
       },
       {
         "key": "social",
         "name": "机会敏感度",
         "direction": "社交共振",
-        "strength": 16,
+        "strength": 39,
         "tag": "ECHO"
       }
     ],
     "quickAdvice": [
-      "选定一个主交易周期和一个主信号源，减少风格漂移。",
+      "把社群观点分成线索而不是结论，所有入场都必须通过个人检查清单。",
       "叙事很强时，先写下一个可验证的反证指标；指标没过，不把热度当入场理由。"
     ],
     "reportPage": {
@@ -52,18 +104,90 @@
       "visualDesign": {
         "theme": "neon-risk-passport",
         "primaryAsset": "/assets/degendna-logo.png",
-        "components": ["heroBadge", "shareCard", "axisMeters", "actionChecklist", "lockedUpgradeRail"]
+        "palette": {
+          "background": "#070b11",
+          "panel": "#0d141e",
+          "accent": "#43e7ff",
+          "positive": "#7cffb2",
+          "warning": "#ffe08a",
+          "danger": "#ff8b8b"
+        },
+        "components": [
+          "heroBadge",
+          "shareCard",
+          "axisMeters",
+          "actionChecklist",
+          "lockedUpgradeRail"
+        ]
       },
-      "unlockedSections": ["人格徽章", "核心优势", "主要盲区", "一条行动规则", "分享文案"],
-      "lockedSections": ["六维雷达", "完整复盘清单", "7/14/30 天训练计划"]
-    }
+      "unlockedSections": [
+        "人格徽章",
+        "核心优势",
+        "主要盲区",
+        "一条行动规则",
+        "分享文案"
+      ],
+      "lockedSections": [
+        "六维雷达",
+        "完整复盘清单",
+        "7/14/30 天训练计划"
+      ]
+    },
+    "upgradeOptions": [
+      {
+        "key": "standard",
+        "name": "标准版",
+        "serviceName": "测出我的链上交易人格·标准版",
+        "reportName": "24题标准报告",
+        "questionCount": 24,
+        "priceUsd": 1.99,
+        "price": "$1.99",
+        "questionnaire": "/api/asp/trading-persona?mode=standard",
+        "endpoint": "/api/asp/trading-persona/score/standard",
+        "promise": "覆盖六个维度的核心偏好，生成优势、盲区、执行协议和轻量复盘清单。",
+        "unlocks": [
+          "交易人格码",
+          "六维画像",
+          "优势与盲区",
+          "执行协议",
+          "轻量复盘清单",
+          "X 分享文案"
+        ]
+      },
+      {
+        "key": "full",
+        "name": "完整版",
+        "serviceName": "测出我的链上交易人格·完整版",
+        "reportName": "72题完整训练计划",
+        "questionCount": 72,
+        "priceUsd": 3.99,
+        "price": "$3.99",
+        "questionnaire": "/api/asp/trading-persona?mode=full",
+        "endpoint": "/api/asp/trading-persona/score/full",
+        "promise": "完整 72 题画像，生成六维雷达、盲区、复盘清单、7/14/30 天训练计划和分享文案。",
+        "unlocks": [
+          "完整 72 题画像",
+          "六维分数",
+          "完整交易计划",
+          "入场/仓位/退出规则",
+          "7/14/30 天训练计划",
+          "X 分享文案"
+        ]
+      }
+    ]
   },
+  "code": "ECHO-ELP-SFH-W2",
   "completion": {
     "answeredCount": 12,
     "modeQuestionCount": 12,
     "totalQuestionCount": 72,
     "modeCompletionRate": 1,
     "totalCompletionRate": 0.1667
+  },
+  "evidence": {
+    "requestId": "quick-fcc6ff8c4c4557f8",
+    "requestHash": "fcc6ff8c4c4557f8",
+    "resultHash": "9f014491a991ed5d"
   },
   "disclaimer": "DegenDNA.fun 自研交易人格自查模型，用于娱乐、自我观察和交易行为复盘；不属于 MBTI、Myers-Briggs Type Indicator 或任何第三方授权人格量表，结果不构成投资建议。"
 }

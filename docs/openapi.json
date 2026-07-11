@@ -208,7 +208,7 @@
               "type": "object",
               "properties": {
                 "answers": {
-                  "description": "For quick and standard modes, arrays are mapped to the returned question order. Objects can use degenPersona:<index> keys.",
+                  "description": "Submit every answer required by the selected tier. Arrays are mapped to the returned question order. Objects must use the questionnaire's canonical degenPersona:<questionIndex> keys. Scores are normalized per dimension to the complete 72-question scale.",
                   "oneOf": [
                     {
                       "type": "array",

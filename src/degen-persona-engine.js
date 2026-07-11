@@ -323,7 +323,7 @@ export const DEGEN_PERSONA_TYPES = [
 ];
 
 
-export const DEGEN_PERSONA_MODEL_VERSION = "degen-persona-code-v3-72q";
+export const DEGEN_PERSONA_MODEL_VERSION = "degen-persona-code-v4-normalized-72q";
 export const DEGEN_PERSONA_DISCLAIMER = "DegenDNA.fun 自研交易人格自查模型，用于娱乐、自我观察和交易行为复盘；不属于 MBTI、Myers-Briggs Type Indicator 或任何第三方授权人格量表，结果不构成投资建议。";
 
 const DEGEN_PERSONA_SUBTYPES = {
@@ -412,8 +412,20 @@ function degenPersonaConfidence(answeredCount, questionCount, intensity) {
   const completion = questionCount ? answeredCount / questionCount : 0;
   const signal = Math.min(1, intensity.score / 70);
   const score = Math.round((completion * 0.7 + signal * 0.3) * 100);
-  const label = score >= 82 ? "高置信" : score >= 62 ? "中高置信" : score >= 42 ? "中等置信" : "样本偏少";
-  return { score, label };
+  const label = completion < 0.25
+    ? "初步倾向"
+    : completion < 0.75
+      ? "中等置信"
+      : score >= 82
+        ? "高置信"
+        : score >= 62
+          ? "中高置信"
+          : "中等置信";
+  return {
+    score,
+    label,
+    sampleCoverage: Number(completion.toFixed(4))
+  };
 }
 
 function formatAxisCode(rawCode) {
@@ -515,13 +527,29 @@ export function normalizeDegenPersonaAnswers(input) {
 
 export function computeDegenPersonaResultFromAnswers(input) {
   const answers = normalizeDegenPersonaAnswers(input);
-  const scores = Object.fromEntries(Object.keys(DEGEN_PERSONA_DIMENSIONS).map((key) => [key, 0]));
+  const dimensionKeys = Object.keys(DEGEN_PERSONA_DIMENSIONS);
+  const rawScores = Object.fromEntries(dimensionKeys.map((key) => [key, 0]));
+  const answeredByDimension = Object.fromEntries(dimensionKeys.map((key) => [key, 0]));
+  const questionsByDimension = Object.fromEntries(dimensionKeys.map((key) => [
+    key,
+    DEGEN_PERSONA_QUESTIONS.filter((question) => question.dim === key).length
+  ]));
 
   DEGEN_PERSONA_QUESTIONS.forEach((question, index) => {
     const value = answers[`degenPersona:${index}`];
     if (value === undefined || !question.dim) return;
-    scores[question.dim] += Number(value) * 5;
+    rawScores[question.dim] += Number(value) * 5;
+    answeredByDimension[question.dim] += 1;
   });
+
+  // Normalize every dimension to the complete 72-question scale. This keeps
+  // classification thresholds comparable for balanced 12, 24, and 72 question modes.
+  const scores = Object.fromEntries(dimensionKeys.map((key) => {
+    const answered = answeredByDimension[key];
+    const target = questionsByDimension[key];
+    const normalized = answered ? rawScores[key] * (target / answered) : 0;
+    return [key, Number(normalized.toFixed(2))];
+  }));
 
   const rawCode = Object.entries(DEGEN_PERSONA_DIMENSIONS).map(([key, dimension]) => (
     scores[key] >= 0 ? dimension.rightCode : dimension.leftCode
@@ -530,8 +558,21 @@ export function computeDegenPersonaResultFromAnswers(input) {
   const dimensions = Object.entries(DEGEN_PERSONA_DIMENSIONS).map(([key, dimension]) => {
     const score = scores[key];
     const direction = score >= 0 ? dimension.right : dimension.left;
-    const strength = Math.min(100, Math.round(Math.abs(score) * 2));
-    return { key, ...dimension, score, strength, direction };
+    const fullScale = questionsByDimension[key] * 2 * 5;
+    const strength = fullScale
+      ? Math.min(100, Math.round((Math.abs(score) / fullScale) * 100))
+      : 0;
+    return {
+      key,
+      ...dimension,
+      score,
+      strength,
+      direction,
+      answeredCount: answeredByDimension[key],
+      sampleCoverage: questionsByDimension[key]
+        ? Number((answeredByDimension[key] / questionsByDimension[key]).toFixed(4))
+        : 0
+    };
   });
   const strongest = [...dimensions].sort((a, b) => b.strength - a.strength).slice(0, 2);
   const answeredCount = Object.keys(answers).length;
@@ -551,6 +592,13 @@ export function computeDegenPersonaResultFromAnswers(input) {
     intensity,
     confidence,
     scores,
+    rawScores,
+    answeredByDimension,
+    scoring: {
+      method: "dimension-mean-normalized-v1",
+      normalizedToQuestionCount: questionsByDimension,
+      answerRange: [-2, 2]
+    },
     dimensions,
     strongest,
     answers,
