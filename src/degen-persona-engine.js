@@ -64,6 +64,19 @@ export const DEGEN_PERSONA_DIMENSIONS = {
   }
 };
 
+export const DEGEN_PERSONA_ANSWER_OPTIONS = Object.freeze([
+  { key: "A", value: -2, side: "left", zh: "强烈偏左", en: "Strongly prefer left" },
+  { key: "B", value: -1.2, side: "left", zh: "偏左", en: "Prefer left" },
+  { key: "C", value: -0.35, side: "left", zh: "轻微偏左", en: "Slightly prefer left" },
+  { key: "D", value: 0.35, side: "right", zh: "轻微偏右", en: "Slightly prefer right" },
+  { key: "E", value: 1.2, side: "right", zh: "偏右", en: "Prefer right" },
+  { key: "F", value: 2, side: "right", zh: "强烈偏右", en: "Strongly prefer right" }
+]);
+
+const DEGEN_PERSONA_ANSWER_BY_KEY = new Map(
+  DEGEN_PERSONA_ANSWER_OPTIONS.map((option) => [option.key, option.value])
+);
+
 export const DEGEN_PERSONA_QUESTIONS = [
   { dim: "social", left: "先自己查链上与仓位", right: "先看群里聪明钱怎么聊", text: "遇到一个新叙事时，我更像哪一种反应？" },
   { dim: "social", left: "独自复盘亏损原因", right: "立刻找朋友对答案", text: "一笔交易亏损后，我通常会怎么处理？" },
@@ -517,12 +530,48 @@ export function normalizeDegenPersonaAnswers(input) {
   DEGEN_PERSONA_QUESTIONS.forEach((question, index) => {
     const raw = source[`degenPersona:${index}`] ?? source[question.id] ?? source[index] ?? source[String(index)];
     if (raw === undefined || raw === null || raw === "") return;
-    const value = Number(raw);
+    const value = normalizeDegenPersonaAnswerValue(raw);
     if (!Number.isFinite(value)) return;
     answers[`degenPersona:${index}`] = Math.max(-2, Math.min(2, value));
   });
 
   return answers;
+}
+
+export function normalizeDegenPersonaAnswerValue(raw) {
+  if (typeof raw === "number") return raw;
+  if (typeof raw !== "string") return Number(raw);
+
+  const trimmed = raw.trim();
+  if (!trimmed) return Number.NaN;
+
+  const numeric = Number(trimmed);
+  if (Number.isFinite(numeric)) return numeric;
+
+  const normalized = trimmed.normalize("NFKC").toUpperCase();
+  const compact = normalized.replace(/\s+/g, "");
+  if (DEGEN_PERSONA_ANSWER_BY_KEY.has(compact)) {
+    return DEGEN_PERSONA_ANSWER_BY_KEY.get(compact);
+  }
+
+  const explicitChoice = compact.match(/(?:选|选择|答案|OPTION|CHOICE|ANSWER)[:：=.-]*([A-F])/);
+  if (explicitChoice && DEGEN_PERSONA_ANSWER_BY_KEY.has(explicitChoice[1])) {
+    return DEGEN_PERSONA_ANSWER_BY_KEY.get(explicitChoice[1]);
+  }
+
+  const prefixedChoice = normalized.match(/^([A-F])(?:[\s).:：、。-]|$)/);
+  if (prefixedChoice && DEGEN_PERSONA_ANSWER_BY_KEY.has(prefixedChoice[1])) {
+    return DEGEN_PERSONA_ANSWER_BY_KEY.get(prefixedChoice[1]);
+  }
+
+  if (compact.includes("强烈偏左") || compact.includes("非常偏左")) return -2;
+  if (compact.includes("轻微偏左") || compact.includes("稍微偏左")) return -0.35;
+  if (compact.includes("偏左") || compact.includes("更像左")) return -1.2;
+  if (compact.includes("强烈偏右") || compact.includes("非常偏右")) return 2;
+  if (compact.includes("轻微偏右") || compact.includes("稍微偏右")) return 0.35;
+  if (compact.includes("偏右") || compact.includes("更像右")) return 1.2;
+
+  return Number.NaN;
 }
 
 export function computeDegenPersonaResultFromAnswers(input) {
@@ -597,7 +646,8 @@ export function computeDegenPersonaResultFromAnswers(input) {
     scoring: {
       method: "dimension-mean-normalized-v1",
       normalizedToQuestionCount: questionsByDimension,
-      answerRange: [-2, 2]
+      answerRange: [-2, 2],
+      answerKeys: DEGEN_PERSONA_ANSWER_OPTIONS.map((option) => option.key)
     },
     dimensions,
     strongest,

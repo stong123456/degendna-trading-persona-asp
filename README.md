@@ -15,7 +15,7 @@ DegenDNA 交易人格诊断
 Agent description:
 
 ```text
-DegenDNA 是面向链上交易者的原创行为复盘服务，用 12/24/72 题识别 FOMO、追高、扛单、仓位失控与过度谨慎等偏好，生成可分享的人格码、六维解释、情境应对和可执行训练计划。
+DegenDNA 是面向链上交易者的原创行为复盘服务，用户每题只需选择 A-F，即可用 12/24/72 题识别 FOMO、追高、扛单、仓位失控与过度谨慎等偏好，生成可分享的人格码、六维解释、情境应对和可执行训练计划。
 ```
 
 Suggested service tiers:
@@ -29,7 +29,7 @@ Suggested service tiers:
 Service description:
 
 ```text
-DegenDNA 会根据你的交易习惯生成交易人格码、六维偏好、主要优势、常见亏损盲区和复盘清单。它不预测行情，也不提供买卖建议，只帮助用户看清自己在市场里最容易重复犯的动作。
+DegenDNA 会根据你的交易习惯生成交易人格码、六维偏好、主要优势、常见亏损盲区和复盘清单。用户只需要按题选择 A-F；它不预测行情，也不提供买卖建议，只帮助用户看清自己在市场里最容易重复犯的动作。
 ```
 
 ## Product Tiers
@@ -44,7 +44,27 @@ Free routes only return the questionnaire, catalog, or calibration signals. Paid
 
 All three tiers use dimension-mean normalization against the complete 72-question scale. For the same underlying answers, the primary type, axis code, subtype, and intensity remain comparable across tiers; additional questions increase confidence and unlock report depth instead of mechanically inflating the score.
 
-Each paid route requires all questions for its tier. Arrays follow the questionnaire's returned order; object payloads use the canonical `degenPersona:<questionIndex>` ids returned by the questionnaire.
+Each paid route requires all questions for its tier. The user-facing flow is simple multiple choice: show every question with `A` to `F`, let the user reply with letters, then submit those letters. Arrays follow the questionnaire's returned order; object payloads use the canonical `degenPersona:<questionIndex>` ids returned by the questionnaire. Numeric values from `-2` to `2` remain supported for backward compatibility, but A-F is the recommended OKX.AI interaction.
+
+## User Interaction
+
+For normal users, do not ask them to type scores. Fetch the questionnaire, present each item as:
+
+```text
+1. 遇到一个新叙事时，我更像哪一种反应？
+A. 强烈偏左（-2）｜先自己查链上与仓位
+B. 偏左（-1.2）｜先自己查链上与仓位
+C. 轻微偏左（-0.35）｜先自己查链上与仓位
+D. 轻微偏右（0.35）｜先看群里聪明钱怎么聊
+E. 偏右（1.2）｜先看群里聪明钱怎么聊
+F. 强烈偏右（2）｜先看群里聪明钱怎么聊
+```
+
+The user can answer with letters only, for example:
+
+```json
+{ "answers": ["E", "D", "B", "F", "C", "E", "A", "D", "E", "C", "F", "B"] }
+```
 
 ## API
 

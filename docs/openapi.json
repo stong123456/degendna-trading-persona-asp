@@ -208,22 +208,38 @@
               "type": "object",
               "properties": {
                 "answers": {
-                  "description": "Submit every answer required by the selected tier. Arrays are mapped to the returned question order. Objects must use the questionnaire's canonical degenPersona:<questionIndex> keys. Scores are normalized per dimension to the complete 72-question scale.",
+                  "description": "Submit every answer required by the selected tier. Recommended for OKX.AI: collect A-F choices from the user and submit the letters. Arrays are mapped to the returned question order. Objects must use the questionnaire's canonical degenPersona:<questionIndex> keys. Numeric -2..2 values remain supported for backward compatibility. Scores are normalized per dimension to the complete 72-question scale.",
                   "oneOf": [
                     {
                       "type": "array",
                       "items": {
-                        "type": "number",
-                        "minimum": -2,
-                        "maximum": 2
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "enum": ["A", "B", "C", "D", "E", "F"]
+                          },
+                          {
+                            "type": "number",
+                            "minimum": -2,
+                            "maximum": 2
+                          }
+                        ]
                       }
                     },
                     {
                       "type": "object",
                       "additionalProperties": {
-                        "type": "number",
-                        "minimum": -2,
-                        "maximum": 2
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "enum": ["A", "B", "C", "D", "E", "F"]
+                          },
+                          {
+                            "type": "number",
+                            "minimum": -2,
+                            "maximum": 2
+                          }
+                        ]
                       }
                     }
                   ]

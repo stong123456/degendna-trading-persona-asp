@@ -20,7 +20,7 @@ Agent calls:
 GET /api/asp/trading-persona?mode=quick&lang=zh
 ```
 
-User answers 12 questions.
+Agent shows 12 questions with A-F choices. The user answers with letters only, such as `1=E, 2=D, 3=B`.
 
 Agent calls the paid endpoint:
 
@@ -42,6 +42,7 @@ Agent response:
 ## Standard Mode
 
 Use standard mode when the user wants a six-dimension profile but does not need the full 72-question training plan.
+The interaction is still plain A-F multiple choice; no user-facing scores are required.
 
 ```http
 GET /api/asp/trading-persona?mode=standard&lang=zh
@@ -60,6 +61,7 @@ The report should include:
 ## Full Mode
 
 Use full mode when the user wants the highest-confidence report and a training plan.
+The interaction should be batched in friendly chunks, for example 12 questions at a time, with the user replying only with A-F letters.
 
 ```http
 GET /api/asp/trading-persona?mode=full&lang=zh

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express from "express";
 import {
+  DEGEN_PERSONA_ANSWER_OPTIONS,
   DEGEN_PERSONA_DIMENSIONS,
   DEGEN_PERSONA_DISCLAIMER,
   DEGEN_PERSONA_MODEL_VERSION,
@@ -459,7 +460,7 @@ async function handleMcpRequest(message) {
           tools: [
             {
               name: "start_trading_persona_assessment",
-              description: "Start a DegenDNA trading-persona assessment and return the right question set for quick, standard, or full mode.",
+              description: "Start a DegenDNA trading-persona assessment. Show each question with A-F choices; users can simply reply with letters.",
               inputSchema: {
                 type: "object",
                 properties: {
@@ -470,7 +471,7 @@ async function handleMcpRequest(message) {
             },
             {
               name: "get_trading_persona_questionnaire",
-              description: "Return the DegenDNA trading-persona questionnaire and answer scale for quick, standard, or full mode.",
+              description: "Return the DegenDNA questionnaire with A-F choices, left/right meaning, and score mapping for quick, standard, or full mode.",
               inputSchema: {
                 type: "object",
                 properties: {
@@ -481,7 +482,7 @@ async function handleMcpRequest(message) {
             },
             {
               name: "score_trading_persona",
-              description: "Accept a completed answer set and return calibration signals only. Use the paid HTTP score endpoints to unlock persona codes and reports.",
+              description: "Accept completed A-F answers and return calibration signals only. Use the paid HTTP score endpoints to unlock persona codes and reports.",
               inputSchema: {
                 type: "object",
                 required: ["answers"],
@@ -490,8 +491,14 @@ async function handleMcpRequest(message) {
                   mode: { type: "string", enum: ["quick", "standard", "full"], default: "quick" },
                   answers: {
                     oneOf: [
-                      { type: "array", items: { type: "number", minimum: -2, maximum: 2 } },
-                      { type: "object", additionalProperties: { type: "number", minimum: -2, maximum: 2 } }
+                      { type: "array", items: { oneOf: [
+                        { type: "string", enum: ["A", "B", "C", "D", "E", "F"] },
+                        { type: "number", minimum: -2, maximum: 2 }
+                      ] } },
+                      { type: "object", additionalProperties: { oneOf: [
+                        { type: "string", enum: ["A", "B", "C", "D", "E", "F"] },
+                        { type: "number", minimum: -2, maximum: 2 }
+                      ] } }
                     ]
                   }
                 }
@@ -566,6 +573,36 @@ function jsonRpcError(id, code, message) {
   };
 }
 
+function answerScale(lang = "zh") {
+  return DEGEN_PERSONA_ANSWER_OPTIONS.map((option) => ({
+    key: option.key,
+    value: option.value,
+    side: option.side,
+    label: lang === "en" ? option.en : option.zh
+  }));
+}
+
+function answerChoicesForQuestion(question, lang = "zh") {
+  const isEn = lang === "en";
+  return DEGEN_PERSONA_ANSWER_OPTIONS.map((option) => {
+    const directionLabel = isEn ? option.en : option.zh;
+    const sideLabel = option.side === "left"
+      ? (isEn ? "left" : "偏左")
+      : (isEn ? "right" : "偏右");
+    const sideText = option.side === "left" ? question.left : question.right;
+    return {
+      key: option.key,
+      value: option.value,
+      side: option.side,
+      label: directionLabel,
+      text: sideText,
+      display: isEn
+        ? `${option.key}. ${directionLabel} (${sideLabel}, ${option.value}) - ${sideText}`
+        : `${option.key}. ${directionLabel}（${sideLabel}，${option.value}）｜${sideText}`
+    };
+  });
+}
+
 function questionnairePayload(lang = "zh", mode = "quick") {
   const modeKey = normalizeMode(mode);
   const indexes = questionIndexesForMode(modeKey);
@@ -577,21 +614,15 @@ function questionnairePayload(lang = "zh", mode = "quick") {
     mode: publicMode(modeKey, lang),
     questionCount: indexes.length,
     totalQuestionCount: DEGEN_PERSONA_QUESTIONS.length,
-    answerScale: [
-      { value: -2, label: lang === "en" ? "Strongly prefer left" : "强烈偏左" },
-      { value: -1.2, label: lang === "en" ? "Prefer left" : "偏左" },
-      { value: -0.35, label: lang === "en" ? "Slightly prefer left" : "轻微偏左" },
-      { value: 0.35, label: lang === "en" ? "Slightly prefer right" : "轻微偏右" },
-      { value: 1.2, label: lang === "en" ? "Prefer right" : "偏右" },
-      { value: 2, label: lang === "en" ? "Strongly prefer right" : "强烈偏右" }
-    ],
+    answerScale: answerScale(lang),
     answerSubmission: {
       recommended: lang === "en"
-        ? "Send answers as an object keyed by each question id, for example {\"degenPersona:0\": 1.2}."
-        : "建议用题目 id 作为答案对象的 key，例如 {\"degenPersona:0\": 1.2}。",
+        ? "For normal users, collect only A/B/C/D/E/F. Submit either an array such as [\"A\",\"C\",\"F\"] or an object keyed by question id, for example {\"degenPersona:0\":\"E\"}."
+        : "面向普通用户时，只需要收集 A/B/C/D/E/F。提交时可传数组，例如 [\"A\",\"C\",\"F\"]，也可用题目 id 作为 key，例如 {\"degenPersona:0\":\"E\"}。",
       arraySupport: lang === "en"
         ? "Array answers are interpreted in the same order as the questions returned for this mode."
-        : "如果传数组，服务会按当前模式返回题目的顺序自动映射。"
+        : "如果传数组，服务会按当前模式返回题目的顺序自动映射。",
+      acceptedFormats: ["A-F letters", "numeric values -2..2", "object keyed by degenPersona:<index>", "array in returned question order"]
     },
     dimensions: Object.entries(DEGEN_PERSONA_DIMENSIONS).map(([key, dimension]) => ({
       key,
@@ -612,7 +643,11 @@ function questionnairePayload(lang = "zh", mode = "quick") {
       dimension: question.dim,
       text: question.text,
       left: question.left,
-      right: question.right
+      right: question.right,
+      choices: answerChoicesForQuestion(question, lang),
+      replyFormat: lang === "en"
+        ? "Reply with one letter: A, B, C, D, E, or F."
+        : "用户只需回复一个字母：A、B、C、D、E 或 F。"
       };
     }),
     paidReports: publicModes(lang),
@@ -688,7 +723,10 @@ function scoreGetPayload(mode = "full", lang = "zh", req) {
       : "这个付费 endpoint 已接入 x402。请使用 POST 提交 answers 生成正式报告。",
     expectedMethod: "POST",
     acceptsAnswerShape: {
-      answers: "array | object keyed by degenPersona:<index>"
+      answers: "array of A-F letters | object keyed by degenPersona:<index> | numeric values -2..2",
+      recommended: lang === "en"
+        ? "Ask the user to answer with A/B/C/D/E/F, then submit those letters in the returned question order."
+        : "建议让用户只回复 A/B/C/D/E/F，再按题库返回顺序提交这些字母。"
     },
     questionnaire: `${baseUrl}/api/asp/trading-persona?mode=${modeKey}&lang=${lang}`,
     demoReport: `${baseUrl}/report/demo?mode=${modeKey}&lang=${lang}`,
@@ -737,7 +775,11 @@ function profilePreviewPayload(profile, lang = "zh", mode = "quick") {
       dimension: question.dim,
       text: question.text,
       left: question.left,
-      right: question.right
+      right: question.right,
+      choices: answerChoicesForQuestion(question, lang),
+      replyFormat: lang === "en"
+        ? "Reply with one letter: A, B, C, D, E, or F."
+        : "用户只需回复一个字母：A、B、C、D、E 或 F。"
     };
   });
   return {

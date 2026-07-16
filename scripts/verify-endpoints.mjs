@@ -34,7 +34,9 @@ async function verifyChallenge(tier, method) {
   const options = { method, redirect: "error" };
   if (method === "POST") {
     options.headers = { "content-type": "application/json" };
-    options.body = JSON.stringify({ answers: Array(tier.count).fill(0) });
+    options.body = JSON.stringify({
+      answers: Array.from({ length: tier.count }, (_value, index) => ["A", "B", "C", "D", "E", "F"][index % 6])
+    });
   }
 
   const { response, elapsedMs } = await timedFetch(url, options);

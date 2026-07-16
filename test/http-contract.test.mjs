@@ -17,12 +17,16 @@ test("local HTTP contract returns JSON and complete tier reports", async (contex
   const questionnaireBody = await questionnaire.json();
   assert.equal(questionnaire.status, 200);
   assert.equal(questionnaireBody.questions.length, 12);
+  assert.deepEqual(questionnaireBody.answerScale.map((option) => option.key), ["A", "B", "C", "D", "E", "F"]);
+  assert.equal(questionnaireBody.questions[0].choices.length, 6);
+  assert.equal(questionnaireBody.questions[0].choices[0].key, "A");
+  assert.match(questionnaireBody.answerSubmission.recommended, /A\/B\/C\/D\/E\/F/);
 
   for (const [mode, count] of [["quick", 12], ["standard", 24], ["full", 72]]) {
     const response = await fetch(`${baseUrl}/api/asp/trading-persona/score/${mode}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ answers: Array(count).fill(0) })
+      body: JSON.stringify({ answers: Array.from({ length: count }, (_value, index) => ["A", "B", "C", "D", "E", "F"][index % 6]) })
     });
     const body = await response.json();
     assert.equal(response.status, 200);

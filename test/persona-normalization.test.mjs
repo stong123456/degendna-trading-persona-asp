@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   DEGEN_PERSONA_QUESTIONS,
+  normalizeDegenPersonaAnswers,
   computeDegenPersonaResultFromAnswers
 } from "../src/degen-persona-engine.js";
 
@@ -83,4 +84,33 @@ test("dimension strength uses the full normalized range instead of capping at ra
   assert.equal(strengths.social, 60);
   assert.equal(strengths.execution, 100);
   assert.equal(strengths.validation, 100);
+});
+
+test("letter answers map to the same scores as numeric answers", () => {
+  const letterAnswers = {
+    "degenPersona:0": "A",
+    "degenPersona:1": "B",
+    "degenPersona:2": "C",
+    "degenPersona:3": "D",
+    "degenPersona:4": "E",
+    "degenPersona:5": "F"
+  };
+  assert.deepEqual(normalizeDegenPersonaAnswers(letterAnswers), {
+    "degenPersona:0": -2,
+    "degenPersona:1": -1.2,
+    "degenPersona:2": -0.35,
+    "degenPersona:3": 0.35,
+    "degenPersona:4": 1.2,
+    "degenPersona:5": 2
+  });
+
+  const letterProfile = computeDegenPersonaResultFromAnswers(
+    Object.fromEntries(DEGEN_PERSONA_QUESTIONS.map((_question, index) => [`degenPersona:${index}`, index % 2 ? "F" : "A"]))
+  );
+  const numericProfile = computeDegenPersonaResultFromAnswers(
+    Object.fromEntries(DEGEN_PERSONA_QUESTIONS.map((_question, index) => [`degenPersona:${index}`, index % 2 ? 2 : -2]))
+  );
+
+  assert.deepEqual(letterProfile.scores, numericProfile.scores);
+  assert.equal(letterProfile.code, numericProfile.code);
 });
