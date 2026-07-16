@@ -12,8 +12,12 @@ services:
         sync: false
       - key: X402_ENABLED
         value: "true"
+      - key: X402_REQUIRE_PAYMENT
+        value: "true"
       - key: X402_NETWORK
         value: eip155:196
+      - key: X402_INIT_TIMEOUT_MS
+        value: "8000"
       - key: X402_PRICE
         value: "$3.99"
       - key: X402_PAY_TO
@@ -26,3 +30,5 @@ services:
         sync: false
       - key: OKX_BASE_URL
         value: https://web3.okx.com
+      - key: X402_SYNC_ON_START
+        value: "true"

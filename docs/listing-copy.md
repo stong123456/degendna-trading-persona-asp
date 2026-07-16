@@ -33,7 +33,7 @@ Fee:
 Endpoint:
 
 ```text
-https://degendna.stoneup.xyz/api/asp/trading-persona/score/quick
+https://degendna-trading-persona-asp-production.up.railway.app/api/asp/trading-persona/score/quick
 ```
 
 Description:
@@ -60,7 +60,7 @@ Fee:
 Endpoint:
 
 ```text
-https://degendna.stoneup.xyz/api/asp/trading-persona/score/standard
+https://degendna-trading-persona-asp-production.up.railway.app/api/asp/trading-persona/score/standard
 ```
 
 Description:
@@ -87,7 +87,7 @@ Fee:
 Endpoint:
 
 ```text
-https://degendna.stoneup.xyz/api/asp/trading-persona/score/full
+https://degendna-trading-persona-asp-production.up.railway.app/api/asp/trading-persona/score/full
 ```
 
 Description:
@@ -102,7 +102,7 @@ Description:
 Visual demo page:
 
 ```text
-https://degendna.stoneup.xyz/report/demo?mode=full&lang=zh
+https://degendna-trading-persona-asp-production.up.railway.app/report/demo?mode=full&lang=zh
 ```
 
 90-second X post script:

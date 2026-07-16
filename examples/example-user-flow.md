@@ -83,7 +83,7 @@ The report should include:
 Open a demo report page:
 
 ```text
-https://degendna.stoneup.xyz/report/demo?mode=full&lang=zh
+https://degendna-trading-persona-asp-production.up.railway.app/report/demo?mode=full&lang=zh
 ```
 
 The demo uses sample answers. It is safe for screenshots and X demo videos.

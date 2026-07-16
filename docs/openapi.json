@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://YOUR_DEPLOYED_DOMAIN"
+      "url": "https://degendna-trading-persona-asp-production.up.railway.app"
     }
   ],
   "paths": {

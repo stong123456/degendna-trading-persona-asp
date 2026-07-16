@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "node src/server.mjs",
     "start": "NODE_ENV=production node src/server.mjs",
-    "check": "node --check src/server.mjs && node --check src/degen-persona-engine.js",
+    "check": "node --check src/server.mjs && node --check src/degen-persona-engine.js && node --check scripts/verify-endpoints.mjs",
+    "verify:public": "node scripts/verify-endpoints.mjs",
     "test": "node --test --test-isolation=none test/*.test.mjs"
   },
   "engines": {

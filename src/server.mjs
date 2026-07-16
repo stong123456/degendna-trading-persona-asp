@@ -28,8 +28,15 @@ const scoreRoutes = {
   standard: `${paidRoute}/standard`,
   full: `${paidRoute}/full`
 };
-const protectedScoreMethods = ["GET", "POST"];
+const protectedScoreMethods = ["GET", "HEAD", "POST"];
 const protectedScoreRoutes = [paidRoute, ...Object.values(scoreRoutes)];
+const paymentRuntime = {
+  required: false,
+  requested: false,
+  configured: false,
+  initialized: false,
+  error: ""
+};
 const ASSESSMENT_MODES = {
   quick: {
     key: "quick",
@@ -69,10 +76,10 @@ const ASSESSMENT_MODES = {
 app.disable("x-powered-by");
 app.set("trust proxy", true);
 app.use(cors());
-app.use(express.json({ limit: "96kb" }));
 app.use("/assets", express.static(assetsDir, { maxAge: "1h" }));
 
 await installOptionalX402(app);
+app.use(express.json({ limit: "96kb" }));
 
 app.get("/", (req, res) => {
   const publicBaseUrl = resolvePublicBaseUrl(req);
@@ -98,12 +105,14 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.json({
-    ok: true,
+  const payment = paymentStatus(req);
+  const ok = !payment.required || payment.ready;
+  res.status(ok ? 200 : 503).json({
+    ok,
     service: serviceName,
     version: serviceVersion,
     questionCount: DEGEN_PERSONA_QUESTIONS.length,
-    payment: paymentStatus(req)
+    payment
   });
 });
 
@@ -216,6 +225,13 @@ app.post("/mcp", async (req, res) => {
   }
 });
 
+app.use((error, _req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+    return res.status(400).json({ ok: false, error: "Invalid JSON request body." });
+  }
+  return next(error);
+});
+
 app.use((_req, res) => {
   res.status(404).json({ ok: false, error: "Not found" });
 });
@@ -227,10 +243,18 @@ app.listen(port, () => {
 async function installOptionalX402(expressApp) {
   const payTo = normalizeAddress(process.env.X402_PAY_TO || process.env.PAY_TO_ADDRESS || "");
   const enablePayment = isTruthy(process.env.X402_ENABLED) || Boolean(payTo);
-  if (!enablePayment) return;
+  const requirePayment = isTruthy(process.env.X402_REQUIRE_PAYMENT) || process.env.NODE_ENV === "production";
+  paymentRuntime.required = requirePayment;
+  paymentRuntime.requested = enablePayment;
+
+  if (!enablePayment) {
+    if (requirePayment) installPaymentUnavailableMiddleware(expressApp, "payment_disabled");
+    return;
+  }
 
   if (!payTo) {
-    console.warn("X402 is enabled but X402_PAY_TO is missing; scoring route will run without payment protection.");
+    console.warn("X402 is enabled but X402_PAY_TO is missing; paid routes are unavailable.");
+    installPaymentUnavailableMiddleware(expressApp, "missing_pay_to");
     return;
   }
 
@@ -238,7 +262,8 @@ async function installOptionalX402(expressApp) {
   const secretKey = process.env.OKX_SECRET_KEY || "";
   const passphrase = process.env.OKX_PASSPHRASE || "";
   if (!apiKey || !secretKey || !passphrase) {
-    console.warn("X402 is enabled but OKX_API_KEY, OKX_SECRET_KEY, or OKX_PASSPHRASE is missing; scoring route will run without payment protection.");
+    console.warn("X402 seller credentials are incomplete; paid routes are unavailable.");
+    installPaymentUnavailableMiddleware(expressApp, "missing_seller_credentials");
     return;
   }
 
@@ -249,6 +274,7 @@ async function installOptionalX402(expressApp) {
       import("@okxweb3/x402-evm/exact/server")
     ]);
     const network = process.env.X402_NETWORK || "eip155:196";
+    const initializationTimeoutMs = positiveInteger(process.env.X402_INIT_TIMEOUT_MS, 8000);
     const facilitatorClient = new OKXFacilitatorClient({
       apiKey,
       secretKey,
@@ -258,6 +284,7 @@ async function installOptionalX402(expressApp) {
     });
     const resourceServer = new x402ResourceServer(facilitatorClient);
     resourceServer.register(network, new ExactEvmScheme());
+    paymentRuntime.configured = true;
     const buildRouteConfig = (resourceBaseUrl, route, mode) => Object.fromEntries(protectedScoreMethods.map((method) => [
       `${method} ${route}`,
       {
@@ -284,18 +311,26 @@ async function installOptionalX402(expressApp) {
     let paymentInitPromise = null;
     const initializePayment = async () => {
       if (paymentReady) return;
-      paymentInitPromise ??= resourceServer.initialize()
+      paymentInitPromise ??= withTimeout(
+        resourceServer.initialize(),
+        initializationTimeoutMs,
+        "X402 facilitator initialization timed out"
+      )
         .then(() => {
           paymentReady = true;
+          paymentRuntime.initialized = true;
+          paymentRuntime.error = "";
         })
         .catch((error) => {
+          paymentRuntime.initialized = false;
+          paymentRuntime.error = "facilitator_unavailable";
           paymentInitPromise = null;
           throw error;
         });
       await paymentInitPromise;
     };
 
-    const syncFacilitatorOnStart = isTruthy(process.env.X402_SYNC_ON_START);
+    const syncFacilitatorOnStart = requirePayment || isTruthy(process.env.X402_SYNC_ON_START);
     if (syncFacilitatorOnStart) {
       initializePayment().catch((error) => {
         console.warn(`X402 facilitator startup sync failed: ${error.message}`);
@@ -329,8 +364,39 @@ async function installOptionalX402(expressApp) {
       return middlewareForRequest(req)(req, res, next);
     });
   } catch (error) {
+    paymentRuntime.configured = false;
+    paymentRuntime.initialized = false;
+    paymentRuntime.error = "middleware_unavailable";
     console.warn(`X402 middleware could not be installed: ${error.message}`);
+    installPaymentUnavailableMiddleware(expressApp, "middleware_unavailable");
   }
+}
+
+function installPaymentUnavailableMiddleware(expressApp, reason) {
+  paymentRuntime.configured = false;
+  paymentRuntime.initialized = false;
+  paymentRuntime.error = reason;
+  expressApp.use((req, res, next) => {
+    if (!protectedScoreMethods.includes(req.method) || !protectedScoreRoutes.includes(req.path)) return next();
+    return res.status(503).json({
+      ok: false,
+      error: "Payment service is not ready. Please try again later."
+    });
+  });
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+    timeoutId.unref?.();
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+function positiveInteger(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function wrapPaymentRequiredResponse(res) {
@@ -2293,15 +2359,14 @@ function isTruthy(value) {
 }
 
 function paymentStatus(req) {
-  const requested = isTruthy(process.env.X402_ENABLED) || Boolean(process.env.X402_PAY_TO || process.env.PAY_TO_ADDRESS);
-  const configured = requested
-    && Boolean(normalizeAddress(process.env.X402_PAY_TO || process.env.PAY_TO_ADDRESS || ""))
-    && Boolean(process.env.OKX_API_KEY)
-    && Boolean(process.env.OKX_SECRET_KEY)
-    && Boolean(process.env.OKX_PASSPHRASE);
+  const requested = paymentRuntime.requested;
+  const configured = paymentRuntime.configured;
   return {
     enabled: configured,
     requested,
+    required: paymentRuntime.required,
+    ready: configured && paymentRuntime.initialized,
+    status: configured && paymentRuntime.initialized ? "ready" : (paymentRuntime.error || "initializing"),
     network: process.env.X402_NETWORK || "eip155:196",
     prices: Object.fromEntries(Object.keys(ASSESSMENT_MODES).map((mode) => [mode, paymentPriceForMode(mode)])),
     price: paymentPriceForMode("full"),
@@ -2309,6 +2374,6 @@ function paymentStatus(req) {
     protectedRoutes: protectedScoreRoutes,
     protectedRoute: paidRoute,
     resourceBaseUrl: resolvePublicBaseUrl(req),
-    syncFacilitatorOnStart: isTruthy(process.env.X402_SYNC_ON_START)
+    syncFacilitatorOnStart: paymentRuntime.required || isTruthy(process.env.X402_SYNC_ON_START)
   };
 }

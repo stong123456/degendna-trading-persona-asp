@@ -59,7 +59,7 @@ Each paid route requires all questions for its tier. Arrays follow the questionn
 - `GET /report/demo?mode=quick|standard|full`
 - `POST /mcp`
 
-The `/score/*` routes are intended paid A2MCP listing endpoints. Set `X402_PAY_TO`, `X402_ENABLED=true`, and OKX Developer Portal API credentials in production to enable OKX x402 payment protection. Unpaid requests should return a standard HTTP 402 challenge body.
+The `/score/*` routes are intended paid A2MCP listing endpoints. Production runs fail closed: if payment configuration is missing or the facilitator is unavailable, paid routes return `503` instead of exposing reports for free. A correctly configured unpaid request returns a standard HTTP `402` challenge with a `PAYMENT-REQUIRED` header.
 
 ## Local Run
 
@@ -105,9 +105,11 @@ Required production variables:
 
 ```text
 NODE_ENV=production
-PUBLIC_BASE_URL=https://YOUR_DEPLOYED_DOMAIN
+PUBLIC_BASE_URL=https://degendna-trading-persona-asp-production.up.railway.app
 X402_ENABLED=true
+X402_REQUIRE_PAYMENT=true
 X402_NETWORK=eip155:196
+X402_INIT_TIMEOUT_MS=8000
 X402_PRICE_QUICK=$0.10
 X402_PRICE_STANDARD=$1.99
 X402_PRICE_FULL=$3.99
@@ -118,9 +120,17 @@ OKX_SECRET_KEY=...
 OKX_PASSPHRASE=...
 OKX_BASE_URL=https://web3.okx.com
 OKX_SYNC_SETTLE=false
-X402_SYNC_ON_START=false
+X402_SYNC_ON_START=true
 ```
 
 `PUBLIC_BASE_URL` is recommended. On Railway, do not manually add `PORT`; Railway injects the correct runtime port.
+
+Before submitting or resubmitting the ASP, run the production contract probe:
+
+```bash
+npm run verify:public -- https://degendna-trading-persona-asp-production.up.railway.app
+```
+
+The probe verifies health readiness plus GET and POST payment challenges for all three tiers, including response time, resource URL, network, token amount, and `PAYMENT-REQUIRED` integrity.
 
 Use a public HTTPS domain for OKX.AI registration. The visual demo page is safe to share for demos because it uses sample answers, not user payment data.
